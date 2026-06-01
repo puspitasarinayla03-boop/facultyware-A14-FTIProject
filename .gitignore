@@ -5,6 +5,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Database dump
+db_tb_pweb_v2.sql
+
+# Environment variables
+.env
+
+
 # Runtime data
 pids
 *.pid

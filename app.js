@@ -1,4 +1,8 @@
 require('dotenv').config();
+
+console.log("DB_HOST =", process.env.DB_HOST);
+console.log("DB_NAME =", process.env.DB_NAME);
+console.log("SESSION_SECRET =", process.env.SESSION_SECRET);
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
@@ -6,8 +10,9 @@ var logger = require('morgan');
 var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session);
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var indexRouter    = require('./routes/index');
+var usersRouter    = require('./routes/users');
+var projectsRouter = require('./routes/projects');
 const { notFoundHandler, errorHandler } = require('./middlewares/error');
 
 var app = express();
@@ -28,6 +33,14 @@ const sessionStore = new MySQLStore({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  schema: {
+    tableName: 'sessions',
+    columnNames: {
+      session_id: 'id',
+      expires: 'last_activity',
+      data: 'payload'
+    }
+  }
 });
 
 app.use(session({
@@ -43,6 +56,13 @@ app.use(session({
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/projects', projectsRouter);
+
+// REST API routes
+const projectController = require('./controllers/projectController');
+app.get('/api/projects',     projectController.apiIndex);
+app.get('/api/projects/:id', projectController.apiShow);
+app.post('/api/projects',    projectController.apiStore);
 
 // catch 404 and forward to error handler
 app.use(notFoundHandler);

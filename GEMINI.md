@@ -62,3 +62,211 @@ router.get('/reports', checkPermission(['view_reports', 'manage_all']), reportCo
 ## Commands
 - `npm start`: Runs the production server using `bin/www`.
 - `npm run dev`: Runs the server with `nodemon` for development.
+
+---
+
+# Additional Development Rules
+
+## Database Usage
+
+Before implementing any feature:
+
+1. Analyze the existing database schema.
+2. Use existing tables whenever possible.
+3. Do not create new tables unless absolutely necessary.
+4. Explain table relationships before generating code.
+5. Wait for confirmation before moving to implementation.
+
+Always prioritize the existing Facultyware database structure.
+
+---
+
+## Validation Requirements
+
+All create and update operations must perform server-side validation.
+
+Required validation includes:
+
+- Required fields
+- Data type validation
+- Length validation
+- Enum validation
+- Foreign key validation
+- File upload validation
+
+Client-side validation may be added for better user experience, but server-side validation is mandatory.
+
+---
+
+## Security Requirements
+
+### Database Queries
+
+Always use parameterized queries.
+
+Example:
+
+```javascript
+db.query(
+  "SELECT * FROM events WHERE id = ?",
+  [id]
+);
+```
+
+Never build SQL queries using string concatenation.
+
+### File Uploads
+
+Validate:
+
+- File type
+- File extension
+- File size
+
+Reject unsupported files.
+
+---
+
+## Export Requirements
+
+When implementing export features:
+
+Required flow:
+
+User clicks Export
+→ Server generates file
+→ File is downloaded automatically
+
+Do not require manual retrieval from server storage.
+
+---
+
+## REST API Requirements
+
+At least one feature must expose REST API endpoints.
+
+Allowed methods:
+
+- GET
+- POST
+
+API responses must use JSON format.
+
+Example:
+
+```json
+{
+  "success": true,
+  "message": "Data retrieved successfully",
+  "data": []
+}
+```
+
+---
+
+# FTI Project Module
+
+## Development Workflow
+
+Features must be implemented sequentially.
+
+Complete one module before moving to the next.
+
+### Phase 1 - Project Management
+
+Primary Table:
+
+- events
+
+Responsibilities:
+
+- Create Project
+- View Project List
+- View Project Details
+- Update Project
+- Delete Project
+- Search
+- Pagination
+- REST API (GET & POST)
+
+Suggested API Endpoints:
+
+```http
+GET /api/projects
+GET /api/projects/:id
+POST /api/projects
+```
+
+Phase 1 must be completed and verified before continuing.
+
+---
+
+### Phase 2 - Committee Management
+
+Primary Tables:
+
+- committees
+- committee_members
+
+Responsibilities:
+
+- Create Committee
+- View Committee List
+- View Committee Details
+- Update Committee
+- Delete Committee
+- Manage Committee Members
+- Search
+- Pagination
+
+Additional Requirement:
+
+Generate Committee Appointment Letter (.DOCX)
+
+Suggested Library:
+
+```bash
+npm install docx
+```
+
+Required Flow:
+
+User clicks Generate SK
+→ Server generates DOCX
+→ File downloads automatically
+
+Phase 2 begins only after Project Management is completed.
+
+---
+
+## Code Quality
+
+Generated code should be:
+
+- Clean
+- Readable
+- Consistent with existing Facultyware structure
+- Easy to maintain
+- Easy to debug
+
+Guidelines:
+
+- Use descriptive variable names
+- Keep functions focused on a single responsibility
+- Avoid duplicated code
+- Provide meaningful error messages
+- Follow existing project conventions before introducing new patterns
+
+---
+
+## AI Assistant Behavior
+
+When assisting development:
+
+1. Analyze the database before generating code.
+2. Explain the implementation plan first.
+3. Generate code incrementally.
+4. Follow the existing Facultyware architecture.
+5. Prefer modifying existing files over creating unnecessary files.
+6. Do not skip validation and ACL considerations.
+7. Wait for confirmation before moving to the next development phase.

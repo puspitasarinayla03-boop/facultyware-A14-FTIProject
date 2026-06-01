@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="id">
+<%- include('../partials/_head', { title }) %>
+<body class="bg-background text-foreground antialiased">
+
+<%- include('../partials/_sidebar', { user }) %>
+
+<main id="content">
+
+  <%# ── Page Header ─────────────────────────────────────────────────────────── %>
+  <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
+    <button type="button"
+            onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))"
+            aria-label="Toggle sidebar"
+            class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="6"  x2="21" y2="6"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <a href="/projects"
+       hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+       class="btn-sm-ghost h-7 text-muted-foreground gap-1.5 hidden sm:inline-flex">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+      Semua Proyek
+    </a>
+    <span class="text-muted-foreground hidden sm:inline">/</span>
+    <h1 class="text-base font-semibold truncate flex-1 md:max-w-xs"><%= project.title %></h1>
+
+    <div class="ml-auto flex items-center gap-2">
+      <button type="button" aria-label="Toggle dark mode"
+              onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))"
+              class="btn-icon-outline size-8 hidden sm:inline-flex">
+        <span class="hidden dark:block">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+          </svg>
+        </span>
+        <span class="block dark:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        </span>
+      </button>
+
+      <a href="/projects/<%= project.id %>/edit"
+         hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+         class="btn-sm-outline">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/>
+        </svg>
+        <span class="hidden sm:inline">Edit</span>
+      </a>
+      <form method="POST" action="/projects/<%= project.id %>/delete"
+            onsubmit="return confirm('Hapus proyek ini? Tindakan tidak bisa dibatalkan.')">
+        <button type="submit" class="btn-sm-outline text-destructive hover:bg-destructive/10 hover:border-destructive/40">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          <span class="hidden sm:inline">Hapus</span>
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <%# ── Content ──────────────────────────────────────────────────────────────── %>
+  <div class="p-4 md:p-6 xl:p-12">
+    <div class="max-w-screen-lg mx-auto space-y-6">
+
+      <%
+        const statusMap = {
+          draft: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
+          published: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+          closed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+          cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+        };
+        const typeMap = {
+          seminar: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400',
+          workshop: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
+          training: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',
+          conference: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
+          webinar: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400',
+          other: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
+        };
+      %>
+
+      <%# ── Hero Card ─────────────────────────────────────────────────────────── %>
+      <div class="card p-6">
+        <div class="flex flex-wrap items-start gap-3 mb-4">
+          <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize <%= typeMap[project.event_type] || '' %>">
+            <%= project.event_type %>
+          </span>
+          <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize border border-border">
+            <%= project.delivery_mode %>
+          </span>
+          <span class="ml-auto inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize <%= statusMap[project.status] || '' %>">
+            <%= project.status %>
+          </span>
+        </div>
+
+        <h2 class="text-2xl font-bold tracking-tight mb-2"><%= project.title %></h2>
+
+        <% if (project.description) { %>
+          <p class="text-muted-foreground text-sm leading-relaxed"><%= project.description %></p>
+        <% } else { %>
+          <p class="text-muted-foreground text-sm italic">Tidak ada deskripsi.</p>
+        <% } %>
+      </div>
+
+      <%# ── Details Grid ───────────────────────────────────────────────────────── %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <%# Jadwal %>
+        <div class="card p-5">
+          <h3 class="font-semibold text-sm flex items-center gap-2 mb-4 text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Jadwal
+          </h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-muted-foreground text-xs uppercase tracking-wider">Mulai</span>
+              <span class="font-medium">
+                <%= new Date(project.start_date).toLocaleDateString('id-ID', {weekday:'long',day:'2-digit',month:'long',year:'numeric'}) %>
+                <% if (project.start_time) { %> <span class="text-muted-foreground ml-1">(<%= project.start_time %>)</span> <% } %>
+              </span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-muted-foreground text-xs uppercase tracking-wider">Selesai</span>
+              <span class="font-medium">
+                <%= new Date(project.end_date).toLocaleDateString('id-ID', {weekday:'long',day:'2-digit',month:'long',year:'numeric'}) %>
+                <% if (project.end_time) { %> <span class="text-muted-foreground ml-1">(<%= project.end_time %>)</span> <% } %>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <%# Lokasi %>
+        <div class="card p-5">
+          <h3 class="font-semibold text-sm flex items-center gap-2 mb-4 text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            Lokasi & Platform
+          </h3>
+          <div class="space-y-3 text-sm">
+            <% if (project.venue) { %>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-muted-foreground text-xs uppercase tracking-wider">Venue</span>
+              <span class="font-medium"><%= project.venue %></span>
+            </div>
+            <% } %>
+            <% if (project.online_platform) { %>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-muted-foreground text-xs uppercase tracking-wider">Platform</span>
+              <span class="font-medium"><%= project.online_platform %></span>
+            </div>
+            <% } %>
+            <% if (project.online_link) { %>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-muted-foreground text-xs uppercase tracking-wider">Link</span>
+              <a href="<%= project.online_link %>" target="_blank"
+                 class="text-primary hover:underline break-all">
+                <%= project.online_link %>
+              </a>
+            </div>
+            <% } %>
+            <% if (!project.venue && !project.online_platform && !project.online_link) { %>
+              <p class="text-muted-foreground text-sm italic">Belum ada informasi lokasi.</p>
+            <% } %>
+          </div>
+        </div>
+
+        <%# Peserta %>
+        <div class="card p-5">
+          <h3 class="font-semibold text-sm flex items-center gap-2 mb-4 text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Peserta
+          </h3>
+          <div class="text-sm space-y-3">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-muted-foreground text-xs uppercase tracking-wider">Kuota</span>
+              <% if (project.quota) { %>
+                <span class="text-2xl font-bold"><%= project.quota %></span>
+              <% } else { %>
+                <span class="text-sm italic">Tidak terbatas</span>
+              <% } %>
+            </div>
+            <% if (project.registration_deadline) { %>
+            <div class="flex flex-col gap-0.5 pt-2 border-t border-border">
+              <span class="text-muted-foreground text-xs uppercase tracking-wider">Deadline Pendaftaran</span>
+              <span class="font-medium">
+                <%= new Date(project.registration_deadline).toLocaleString('id-ID') %>
+              </span>
+            </div>
+            <% } %>
+          </div>
+        </div>
+
+        <%# Metadata %>
+        <div class="card p-5">
+          <h3 class="font-semibold text-sm flex items-center gap-2 mb-4 text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Metadata
+          </h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between gap-4">
+              <span class="text-muted-foreground">Dibuat oleh</span>
+              <span class="font-medium text-right"><%= project.creator_name || '—' %></span>
+            </div>
+            <div class="flex justify-between gap-4">
+              <span class="text-muted-foreground">Dibuat</span>
+              <span class="text-right">
+                <%= project.created_at ? new Date(project.created_at).toLocaleString('id-ID') : '—' %>
+              </span>
+            </div>
+            <div class="flex justify-between gap-4">
+              <span class="text-muted-foreground">Diperbarui</span>
+              <span class="text-right">
+                <%= project.updated_at ? new Date(project.updated_at).toLocaleString('id-ID') : '—' %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%# Objectives %>
+      <% if (project.objectives) { %>
+      <div class="card p-5">
+        <h3 class="font-semibold text-sm mb-3 flex items-center gap-2 text-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          Tujuan Kegiatan
+        </h3>
+        <p class="text-sm leading-relaxed"><%= project.objectives %></p>
+      </div>
+      <% } %>
+
+    </div>
+  </div>
+
+</main>
+
+<%- include('../partials/_scripts') %>
+</body>
+</html>
