@@ -7,7 +7,6 @@
 
 <main id="content">
 
-  <%# ── Page Header ─────────────────────────────────────────────────────────── %>
   <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
     <button type="button"
             onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))"
@@ -15,9 +14,7 @@
             class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="12" x2="21" y2="12"/>
-        <line x1="3" y1="6"  x2="21" y2="6"/>
-        <line x1="3" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
     </button>
     <a href="/projects/<%= project.id %>"
@@ -27,34 +24,26 @@
            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="m15 18-6-6 6-6"/>
       </svg>
-      Batal Edit
+      Kembali
     </a>
     <span class="text-muted-foreground hidden sm:inline">/</span>
-    <h1 class="text-base font-semibold truncate flex-1 md:max-w-xs">Edit Proyek</h1>
+    <h1 class="text-base font-semibold">Edit Proyek</h1>
 
     <div class="ml-auto flex items-center gap-2">
       <button type="button" aria-label="Toggle dark mode"
               onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))"
               class="btn-icon-outline size-8">
-        <span class="hidden dark:block">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
-          </svg>
-        </span>
-        <span class="block dark:hidden">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-          </svg>
-        </span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
       </button>
     </div>
   </header>
 
-  <%# ── Form ────────────────────────────────────────────────────────────────── %>
   <div class="p-4 md:p-6 xl:p-12">
     <div class="max-w-screen-md mx-auto">
 
-      <%# Error Alert %>
       <% if (errors && errors.length > 0) { %>
       <div class="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
         <p class="font-medium mb-1">Terdapat kesalahan pada input:</p>
@@ -68,61 +57,38 @@
 
       <form method="POST" action="/projects/<%= project.id %>/update" class="grid gap-6">
 
-        <%# ── Informasi Dasar ─────────────────────────────────────────────────── %>
         <div class="card">
           <header>
-            <h2>Informasi Dasar</h2>
+            <h2>Informasi Proyek / Kegiatan</h2>
+            <p>Ubah detail utama tentang proyek atau kegiatan.</p>
           </header>
-
-          <section class="grid gap-6">
+          <section class="grid gap-5">
             <div class="grid gap-2">
-              <label for="title">Judul Proyek <span class="text-destructive">*</span></label>
-              <input type="text" id="title" name="title" class="input w-full"
-                     value="<%= project.title || '' %>" required maxlength="255" />
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="grid gap-2">
-                <label for="event_type">Tipe Kegiatan <span class="text-destructive">*</span></label>
-                <select id="event_type" name="event_type" class="select w-full" required>
-                  <option value="seminar"    <%= project.event_type === 'seminar'    ? 'selected' : '' %>>Seminar</option>
-                  <option value="workshop"   <%= project.event_type === 'workshop'   ? 'selected' : '' %>>Workshop</option>
-                  <option value="training"   <%= project.event_type === 'training'   ? 'selected' : '' %>>Training</option>
-                  <option value="conference" <%= project.event_type === 'conference' ? 'selected' : '' %>>Conference</option>
-                  <option value="webinar"    <%= project.event_type === 'webinar'    ? 'selected' : '' %>>Webinar</option>
-                  <option value="other"      <%= project.event_type === 'other'      ? 'selected' : '' %>>Lainnya</option>
-                </select>
-              </div>
-
-              <div class="grid gap-2">
-                <label for="delivery_mode">Mode Pelaksanaan <span class="text-destructive">*</span></label>
-                <select id="delivery_mode" name="delivery_mode" class="select w-full" required>
-                  <option value="offline" <%= project.delivery_mode === 'offline' ? 'selected' : '' %>>Offline</option>
-                  <option value="online"  <%= project.delivery_mode === 'online'  ? 'selected' : '' %>>Online</option>
-                  <option value="hybrid"  <%= project.delivery_mode === 'hybrid'  ? 'selected' : '' %>>Hybrid</option>
-                </select>
-              </div>
+              <label for="name">Nama Kegiatan <span class="text-destructive">*</span></label>
+              <input type="text" id="name" name="name" class="input w-full"
+                     value="<%= project.name || '' %>"
+                     placeholder="Masukkan nama proyek atau kegiatan..." required maxlength="255" />
             </div>
 
             <div class="grid gap-2">
               <label for="description">Deskripsi</label>
-              <textarea id="description" name="description" class="input w-full min-h-[100px] py-2"><%= project.description || '' %></textarea>
+              <textarea id="description" name="description" class="input w-full min-h-[100px] py-2"
+                        placeholder="Deskripsi singkat tentang proyek..."><%= project.description || '' %></textarea>
             </div>
 
             <div class="grid gap-2">
-              <label for="objectives">Tujuan Kegiatan</label>
-              <textarea id="objectives" name="objectives" class="input w-full min-h-[80px] py-2"><%= project.objectives || '' %></textarea>
+              <label for="objective">Tujuan Kegiatan <span class="text-destructive">*</span></label>
+              <textarea id="objective" name="objective" class="input w-full min-h-[80px] py-2"
+                        placeholder="Apa yang ingin dicapai dari kegiatan ini?" required><%= project.objective || '' %></textarea>
             </div>
           </section>
         </div>
 
-        <%# ── Jadwal & Tempat ────────────────────────────────────────────────── %>
         <div class="card">
           <header>
-            <h2>Jadwal & Lokasi</h2>
+            <h2>Jadwal Pelaksanaan</h2>
           </header>
-
-          <section class="grid gap-6">
+          <section class="grid gap-5">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="grid gap-2">
                 <label for="start_date">Tanggal Mulai <span class="text-destructive">*</span></label>
@@ -130,101 +96,40 @@
                        value="<%= project.start_date ? new Date(project.start_date).toISOString().split('T')[0] : '' %>" required />
               </div>
               <div class="grid gap-2">
-                <label for="end_date">Tanggal Selesai <span class="text-destructive">*</span></label>
+                <label for="end_date">Tanggal Selesai</label>
                 <input type="date" id="end_date" name="end_date" class="input w-full"
-                       value="<%= project.end_date ? new Date(project.end_date).toISOString().split('T')[0] : '' %>" required />
-              </div>
-              <div class="grid gap-2">
-                <label for="start_time">Jam Mulai</label>
-                <input type="time" id="start_time" name="start_time" class="input w-full"
-                       value="<%= project.start_time || '' %>" />
-              </div>
-              <div class="grid gap-2">
-                <label for="end_time">Jam Selesai</label>
-                <input type="time" id="end_time" name="end_time" class="input w-full"
-                       value="<%= project.end_time || '' %>" />
-              </div>
-            </div>
-
-            <div class="grid gap-2 mt-2">
-              <label for="venue">Lokasi / Venue (Offline)</label>
-              <input type="text" id="venue" name="venue" class="input w-full" value="<%= project.venue || '' %>" />
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="grid gap-2">
-                <label for="online_platform">Platform Online</label>
-                <input type="text" id="online_platform" name="online_platform" class="input w-full"
-                       value="<%= project.online_platform || '' %>" />
-              </div>
-              <div class="grid gap-2">
-                <label for="online_link">Link Online</label>
-                <input type="url" id="online_link" name="online_link" class="input w-full"
-                       value="<%= project.online_link || '' %>" />
+                       value="<%= project.end_date ? new Date(project.end_date).toISOString().split('T')[0] : '' %>" />
               </div>
             </div>
           </section>
         </div>
 
-        <%# ── Peserta & Status ───────────────────────────────────────────────── %>
         <div class="card">
           <header>
-            <h2>Peserta & Pengaturan</h2>
+            <h2>Status</h2>
           </header>
-
-          <section class="grid gap-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="grid gap-2">
-                <label for="quota">Kuota Peserta</label>
-                <input type="number" id="quota" name="quota" min="1" class="input w-full"
-                       value="<%= project.quota || '' %>" />
-              </div>
-              <div class="grid gap-2">
-                <label for="registration_deadline">Deadline Pendaftaran</label>
-                <%
-                  let deadlineVal = '';
-                  if (project.registration_deadline) {
-                    try {
-                      deadlineVal = new Date(project.registration_deadline).toISOString().slice(0, 16);
-                    } catch(e) {}
-                  }
-                %>
-                <input type="datetime-local" id="registration_deadline" name="registration_deadline"
-                       class="input w-full" value="<%= deadlineVal %>" />
-              </div>
-            </div>
-
-            <div class="grid gap-2 mt-2">
-              <label for="status">Status <span class="text-destructive">*</span></label>
+          <section>
+            <div class="grid gap-2">
+              <label for="status">Status Kegiatan <span class="text-destructive">*</span></label>
               <select id="status" name="status" class="select w-full" required>
+                <option value="">Pilih status...</option>
                 <option value="draft"     <%= project.status === 'draft'     ? 'selected' : '' %>>Draft</option>
-                <option value="published" <%= project.status === 'published' ? 'selected' : '' %>>Published</option>
-                <option value="closed"    <%= project.status === 'closed'    ? 'selected' : '' %>>Closed</option>
-                <option value="cancelled" <%= project.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                <option value="active"    <%= project.status === 'active'    ? 'selected' : '' %>>Aktif</option>
+                <option value="completed" <%= project.status === 'completed' ? 'selected' : '' %>>Selesai</option>
+                <option value="cancelled" <%= project.status === 'cancelled' ? 'selected' : '' %>>Dibatalkan</option>
               </select>
             </div>
           </section>
         </div>
 
-        <%# ── Actions ────────────────────────────────────────────────────────── %>
-        <div class="flex items-center justify-between pt-2">
-          <button type="button" class="btn-outline text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive/20"
-                  onclick="if(confirm('Hapus proyek ini?')) document.getElementById('delete-form').submit();">
-            Hapus Proyek
-          </button>
-
-          <div class="flex items-center gap-3">
-            <a href="/projects/<%= project.id %>"
-               hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
-               class="btn-outline">Batal</a>
-            <button type="submit" class="btn">Simpan Perubahan</button>
-          </div>
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <a href="/projects/<%= project.id %>"
+             hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+             class="btn-outline">Batal</a>
+          <button type="submit" class="btn">Simpan Perubahan</button>
         </div>
 
       </form>
-      
-      <form id="delete-form" method="POST" action="/projects/<%= project.id %>/delete" class="hidden"></form>
-
     </div>
   </div>
 

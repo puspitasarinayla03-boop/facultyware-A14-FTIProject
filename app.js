@@ -12,7 +12,8 @@ var MySQLStore = require('express-mysql-session')(session);
 
 var indexRouter    = require('./routes/index');
 var usersRouter    = require('./routes/users');
-var projectsRouter = require('./routes/projects');
+var projectsRouter    = require('./routes/projects');
+var committeesRouter  = require('./routes/committees');
 const { notFoundHandler, errorHandler } = require('./middlewares/error');
 
 var app = express();
@@ -56,7 +57,8 @@ app.use(session({
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/projects', projectsRouter);
+app.use('/projects',    projectsRouter);
+app.use('/committees',  committeesRouter);
 
 // REST API routes
 const projectController = require('./controllers/projectController');

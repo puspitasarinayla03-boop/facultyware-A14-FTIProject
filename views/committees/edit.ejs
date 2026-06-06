@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="id">
+<%- include('../partials/_head', { title }) %>
+<body class="bg-background text-foreground antialiased" hx-boost="true">
+
+<%- include('../partials/_sidebar', { user }) %>
+
+<main id="content">
+
+  <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
+    <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))"
+            aria-label="Toggle sidebar" class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <div class="flex flex-1 items-center gap-2 text-sm text-muted-foreground">
+      <a href="/committees" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+         class="hover:text-foreground transition-colors">Kepanitiaan</a>
+      <span>/</span>
+      <a href="/committees/<%= committee.id %>" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+         class="hover:text-foreground transition-colors truncate max-w-[150px]"><%= committee.name %></a>
+      <span>/</span>
+      <span class="text-foreground font-medium">Edit Anggota</span>
+    </div>
+    <button type="button" aria-label="Toggle dark mode"
+            onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))"
+            class="btn-icon-outline size-8 flex items-center justify-center shrink-0 ml-auto">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="p-4 md:p-6 xl:p-8 bg-muted/20 min-h-[calc(100vh-3.5rem)]">
+    <div class="max-w-3xl mx-auto">
+
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold tracking-tight">Edit Anggota Kepanitiaan</h2>
+          <p class="text-sm text-muted-foreground mt-1">Perbarui susunan anggota untuk kegiatan ini. Detail kegiatan hanya bisa diubah di <a href="/projects/<%= committee.id %>/edit" class="underline">Kelola Proyek</a>.</p>
+        </div>
+        <form method="POST" action="/committees/<%= committee.id %>/delete">
+          <button type="button" onclick="showDeleteModal(this.closest('form'))"
+                  class="btn-ghost text-destructive hover:bg-destructive/10 border-destructive/30 btn-sm gap-1.5" id="header-delete-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            Hapus Semua Anggota
+          </button>
+        </form>
+      </div>
+
+      <% if (errors && errors.length > 0) { %>
+        <div class="rounded-lg border border-destructive/40 bg-destructive/10 text-destructive px-4 py-3 mb-6">
+          <p class="font-semibold text-sm mb-1">Terdapat kesalahan:</p>
+          <ul class="text-sm list-disc list-inside space-y-0.5">
+            <% errors.forEach(e => { %><li><%= e %></li><% }) %>
+          </ul>
+        </div>
+      <% } %>
+
+      <%# ── Info Kegiatan (Read Only) ── %>
+      <div class="card p-5 mb-6 bg-muted/40">
+        <h3 class="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Detail Kegiatan (Hanya Baca)</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;" class="text-sm">
+          <div>
+            <p class="text-xs text-muted-foreground">Nama Kegiatan</p>
+            <p class="font-medium"><%= committee.name %></p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground">Status</p>
+            <p class="font-medium capitalize"><%= committee.status %></p>
+          </div>
+          <% if (committee.start_date) { %>
+          <div>
+            <p class="text-xs text-muted-foreground">Tanggal Mulai</p>
+            <p class="font-medium"><%= new Date(committee.start_date).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) %></p>
+          </div>
+          <% } %>
+          <% if (committee.end_date) { %>
+          <div>
+            <p class="text-xs text-muted-foreground">Tanggal Selesai</p>
+            <p class="font-medium"><%= new Date(committee.end_date).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) %></p>
+          </div>
+          <% } %>
+        </div>
+        <p class="text-xs text-muted-foreground mt-3">Untuk mengubah detail kegiatan, pergi ke
+          <a href="/projects/<%= committee.id %>/edit" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+             class="underline font-medium">Kelola Proyek → Edit</a>.
+        </p>
+      </div>
+
+      <form method="POST" action="/committees/<%= committee.id %>/update" id="committee-edit-form">
+
+        <%# ── Anggota Internal ── %>
+        <div class="card p-6 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-base flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Anggota Internal (Pegawai)
+            </h3>
+            <button type="button" onclick="addInternalRow()" class="btn btn-sm gap-1 text-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/><path d="M12 5v14"/>
+              </svg>
+              Tambah
+            </button>
+          </div>
+          <div id="internal-members-container" class="space-y-3">
+            <%# Populated by JS below %>
+          </div>
+          <p class="text-xs text-muted-foreground mt-3 italic">Hanya boleh ada 1 (satu) Ketua.</p>
+        </div>
+
+        <%# ── Anggota Eksternal ── %>
+        <div class="card p-6 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-base flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
+                <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
+              </svg>
+              Anggota Eksternal (Manual)
+            </h3>
+            <button type="button" onclick="addExternalRow()" class="btn btn-sm gap-1 text-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/><path d="M12 5v14"/>
+              </svg>
+              Tambah
+            </button>
+          </div>
+          <div id="external-members-container" class="space-y-3">
+            <%# Populated by JS below %>
+          </div>
+        </div>
+
+        <div class="flex gap-3 justify-end">
+          <a href="/committees/<%= committee.id %>" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+             class="btn-ghost text-zinc-900 dark:text-zinc-100">Batal</a>
+          <button type="submit" class="btn">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<%# ── Delete Modal ── %>
+<dialog id="delete-modal" class="dialog">
+  <div class="dialog-content max-w-sm">
+    <header class="dialog-header">
+      <h2 class="dialog-title">Hapus Semua Anggota?</h2>
+      <p class="dialog-description">Semua anggota kepanitiaan akan dihapus. Kegiatan/proyek tetap tersimpan.</p>
+    </header>
+    <footer class="dialog-footer">
+      <button type="button" class="btn-ghost text-zinc-900 dark:text-zinc-100" onclick="document.getElementById('delete-modal').close()">Batal</button>
+      <button type="button" id="confirm-delete-btn" class="btn bg-destructive text-white hover:bg-destructive/90">Hapus</button>
+    </footer>
+  </div>
+</dialog>
+
+<script>
+  const EMPLOYEES = <%- JSON.stringify(employees.map(e => ({ id: e.id, name: e.name, nip: e.employee_number }))) %>;
+  const INITIAL_INTERNAL = <%- JSON.stringify(internalMembers.map(m => ({ empId: m.employee_id, role: m.role }))) %>;
+  const INITIAL_EXTERNAL = <%- JSON.stringify(externalMembers.map(m => ({ name: m.name, institution: m.institution || '', role: m.role }))) %>;
+
+  function buildEmployeeOptions(selectedId) {
+    return EMPLOYEES.map(e =>
+      `<option value="${e.id}" ${selectedId == e.id ? 'selected' : ''}>${e.name} (${e.nip || '-'})</option>`
+    ).join('');
+  }
+
+  function buildRoleOptions(selectedRole) {
+    const roles = ['Ketua','Wakil Ketua','Sekretaris','Bendahara','Seksi Acara','Seksi Humas','Seksi Perlengkapan','Seksi Konsumsi','Seksi Dokumentasi','Anggota'];
+    return roles.map(r => `<option value="${r}" ${selectedRole === r ? 'selected' : ''}>${r}</option>`).join('');
+  }
+
+  function addInternalRow(empId='', role='') {
+    const container = document.getElementById('internal-members-container');
+    const div = document.createElement('div');
+    div.className = 'grid grid-cols-1 sm:grid-cols-12 gap-2 items-end p-3 rounded-lg border bg-muted/20';
+    div.innerHTML = `
+      <div class="sm:col-span-6">
+        <label class="label text-xs mb-1">Pegawai</label>
+        <select name="internal_employee_id[]" class="select w-full text-sm" required>
+          <option value="">-- Pilih Pegawai --</option>
+          ${buildEmployeeOptions(empId)}
+        </select>
+      </div>
+      <div class="sm:col-span-5">
+        <label class="label text-xs mb-1">Jabatan/Peran</label>
+        <select name="internal_role[]" class="select w-full text-sm" required>
+          <option value="">-- Pilih Peran --</option>
+          ${buildRoleOptions(role)}
+        </select>
+      </div>
+      <div class="sm:col-span-1 flex justify-end">
+        <button type="button" onclick="this.closest('div.grid').remove()"
+                class="btn-ghost text-destructive hover:bg-destructive/10 size-8 flex items-center justify-center p-0 rounded-md" title="Hapus">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>`;
+    container.appendChild(div);
+  }
+
+  function addExternalRow(name='', institution='', role='') {
+    const container = document.getElementById('external-members-container');
+    const div = document.createElement('div');
+    div.className = 'grid grid-cols-1 sm:grid-cols-12 gap-2 items-end p-3 rounded-lg border bg-muted/20';
+    div.innerHTML = `
+      <div class="sm:col-span-4">
+        <label class="label text-xs mb-1">Nama Lengkap</label>
+        <input type="text" name="external_name[]" value="${name}" placeholder="Nama anggota..." class="input w-full text-sm" required>
+      </div>
+      <div class="sm:col-span-4">
+        <label class="label text-xs mb-1">Asal Institusi</label>
+        <input type="text" name="external_institution[]" value="${institution}" placeholder="Universitas / Perusahaan..." class="input w-full text-sm">
+      </div>
+      <div class="sm:col-span-3">
+        <label class="label text-xs mb-1">Jabatan/Peran</label>
+        <select name="external_role[]" class="select w-full text-sm" required>
+          <option value="">-- Pilih Peran --</option>
+          ${buildRoleOptions(role)}
+        </select>
+      </div>
+      <div class="sm:col-span-1 flex justify-end">
+        <button type="button" onclick="this.closest('div.grid').remove()"
+                class="btn-ghost text-destructive hover:bg-destructive/10 size-8 flex items-center justify-center p-0 rounded-md" title="Hapus">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>`;
+    container.appendChild(div);
+  }
+
+  // Populate rows with existing data
+  if (INITIAL_INTERNAL.length > 0) {
+    INITIAL_INTERNAL.forEach(m => addInternalRow(m.empId, m.role));
+  } else {
+    addInternalRow();
+  }
+  INITIAL_EXTERNAL.forEach(m => addExternalRow(m.name, m.institution, m.role));
+
+  // Delete modal
+  let _deleteForm = null;
+  function showDeleteModal(form) {
+    _deleteForm = form;
+    document.getElementById('delete-modal').showModal();
+  }
+  document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+    if (_deleteForm) _deleteForm.submit();
+  });
+</script>
+
+<%- include('../partials/_scripts') %>
+</body>
+</html>

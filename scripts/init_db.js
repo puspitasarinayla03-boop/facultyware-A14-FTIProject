@@ -68,6 +68,45 @@ async function init() {
     `, [userId]);
     console.log(`✓ Employee seeded (id=${userId}: Admin FTI → EMP001)`);
 
+    // ─── 5. RBAC — roles ────────────────────────────────────────────────────
+    await db.query(`
+      INSERT IGNORE INTO roles (id, name, guard_name, created_at, updated_at)
+      VALUES (1, 'admin', 'web', NOW(), NOW())
+    `);
+    console.log('✓ Role seeded (id=1: admin)');
+
+    // ─── 6. RBAC — permissions ──────────────────────────────────────────────
+    const permissionNames = [
+      'manage_all',
+      'manage_projects',
+      'manage_committees',
+      'manage_users',
+    ];
+    for (const perm of permissionNames) {
+      await db.query(`
+        INSERT IGNORE INTO permissions (name, guard_name, created_at, updated_at)
+        VALUES (?, 'web', NOW(), NOW())
+      `, [perm]);
+    }
+    console.log(`✓ Permissions seeded: ${permissionNames.join(', ')}`);
+
+    // ─── 7. RBAC — role_has_permissions ─────────────────────────────────────
+    const [permRows] = await db.query('SELECT id FROM permissions WHERE name IN (?)', [permissionNames]);
+    for (const p of permRows) {
+      await db.query(
+        'INSERT IGNORE INTO role_has_permissions (permission_id, role_id) VALUES (?, 1)',
+        [p.id]
+      );
+    }
+    console.log('✓ Permissions linked to admin role');
+
+    // ─── 8. RBAC — model_has_roles (assign admin role to admin user) ─────────
+    await db.query(`
+      INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
+      VALUES (1, 'User', ?)
+    `, [userId]);
+    console.log(`✓ Admin role assigned to user id=${userId} via model_has_roles`);
+
     console.log('\n✅ Database initialization complete!');
     console.log('   Login with: admin@example.com / password\n');
 

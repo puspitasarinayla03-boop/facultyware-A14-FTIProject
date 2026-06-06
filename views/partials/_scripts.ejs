@@ -1,2 +1,118 @@
   <%# Toast container %>
   <div id="toaster" class="toaster group" aria-live="polite" aria-label="Notifications"></div>
+
+  <%# Global Delete Confirmation Modal %>
+  <div id="deleteOverlay" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+  ">
+    <%# Click backdrop to close %>
+    <div onclick="closeDeleteModal()" style="position:absolute;inset:0;"></div>
+
+    <%# Modal Card — sits on top of backdrop div %>
+    <div class="card" style="
+      position: relative;
+      z-index: 1;
+      width: 440px;
+      max-width: calc(100vw - 2rem);
+      padding: 0;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);
+    ">
+      <%# Body %>
+      <div style="padding: 2.25rem 2rem 1.5rem; text-align: center;">
+        <%# Icon %>
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 3.5rem;
+          height: 3.5rem;
+          border-radius: 9999px;
+          margin-bottom: 1.25rem;
+          background-color: color-mix(in oklab, var(--destructive) 12%, transparent);
+          color: var(--destructive);
+        ">
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+        </div>
+        <%# Title %>
+        <h3 style="
+          font-size: 1.125rem;
+          font-weight: 700;
+          letter-spacing: -0.025em;
+          margin-bottom: 0.5rem;
+          color: var(--foreground);
+        ">Hapus Data Ini?</h3>
+        <%# Description %>
+        <p style="
+          font-size: 0.875rem;
+          color: var(--muted-foreground);
+          line-height: 1.65;
+        ">
+          Tindakan ini
+          <strong style="color: var(--foreground); font-weight: 600;">tidak dapat dibatalkan</strong>.
+          Data yang dihapus akan hilang secara permanen.
+        </p>
+      </div>
+
+      <%# Footer Buttons %>
+      <div style="
+        display: flex;
+        gap: 0.75rem;
+        padding: 1.25rem 2rem;
+        border-top: 1px solid var(--border);
+        background-color: color-mix(in oklab, var(--muted) 40%, transparent);
+      ">
+        <button type="button" onclick="closeDeleteModal()" class="btn-outline"
+                style="flex: 1; justify-content: center;">
+          Batalkan
+        </button>
+        <button type="button" onclick="executeDeleteForm()" class="btn"
+                style="flex: 1; justify-content: center; background-color: var(--destructive); color: var(--destructive-foreground); border-color: var(--destructive);">
+          Ya, Hapus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.__formToDelete = null;
+
+    function showDeleteModal(form) {
+      window.__formToDelete = form;
+      var overlay = document.getElementById('deleteOverlay');
+      if (overlay) {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeDeleteModal() {
+      window.__formToDelete = null;
+      var overlay = document.getElementById('deleteOverlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    }
+
+    function executeDeleteForm() {
+      if (window.__formToDelete) {
+        window.__formToDelete.submit();
+      }
+    }
+  </script>

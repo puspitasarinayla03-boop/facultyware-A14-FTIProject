@@ -1,49 +1,27 @@
 const db = require('../lib/db');
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
+const STATUSES = ['draft', 'active', 'completed', 'cancelled'];
 
-function generateSlug(title) {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
-}
-
-const EVENT_TYPES = ['seminar', 'workshop', 'training', 'conference', 'webinar', 'other'];
-const DELIVERY_MODES = ['offline', 'online', 'hybrid'];
-const STATUSES = ['draft', 'published', 'closed', 'cancelled'];
-
+// ─── Validation ───────────────────────────────────────────────────────────────
 function validateProject(data) {
   const errors = [];
 
-  if (!data.title || data.title.trim() === '')
-    errors.push('Judul proyek wajib diisi.');
-  if (data.title && data.title.trim().length > 255)
-    errors.push('Judul proyek maksimal 255 karakter.');
+  if (!data.name || data.name.trim() === '')
+    errors.push('Nama kegiatan wajib diisi.');
+  if (data.name && data.name.trim().length > 255)
+    errors.push('Nama kegiatan maksimal 255 karakter.');
 
-  if (!data.event_type || !EVENT_TYPES.includes(data.event_type))
-    errors.push('Tipe kegiatan tidak valid. Pilih salah satu: ' + EVENT_TYPES.join(', '));
-
-  if (!data.delivery_mode || !DELIVERY_MODES.includes(data.delivery_mode))
-    errors.push('Mode pelaksanaan tidak valid. Pilih salah satu: ' + DELIVERY_MODES.join(', '));
+  if (!data.objective || data.objective.trim() === '')
+    errors.push('Tujuan kegiatan wajib diisi.');
 
   if (!data.start_date)
     errors.push('Tanggal mulai wajib diisi.');
-  if (!data.end_date)
-    errors.push('Tanggal selesai wajib diisi.');
   if (data.start_date && data.end_date && data.end_date < data.start_date)
     errors.push('Tanggal selesai harus sama atau setelah tanggal mulai.');
 
   if (!data.status || !STATUSES.includes(data.status))
-    errors.push('Status tidak valid. Pilih salah satu: ' + STATUSES.join(', '));
-
-  if (data.quota && data.quota !== '') {
-    const q = parseInt(data.quota);
-    if (isNaN(q) || q < 1)
-      errors.push('Kuota harus berupa angka positif.');
-  }
+    errors.push('Status tidak valid.');
 
   return errors;
 }
@@ -57,54 +35,53 @@ const index = async (req, res, next) => {
     const limit  = 10;
     const offset = (page - 1) * limit;
 
-    const search      = req.query.search || '';
-    const filterType  = req.query.event_type || '';
+    const search       = req.query.search || '';
     const filterStatus = req.query.status || '';
 
     const whereClauses = [];
     const params = [];
 
     if (search) {
-      whereClauses.push('(e.title LIKE ? OR e.description LIKE ?)');
-      params.push(`%${search}%`, `%${search}%`);
-    }
-    if (filterType) {
-      whereClauses.push('e.event_type = ?');
-      params.push(filterType);
+      whereClauses.push('(c.name LIKE ? OR c.description LIKE ? OR c.objective LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (filterStatus) {
-      whereClauses.push('e.status = ?');
+      whereClauses.push('c.status = ?');
       params.push(filterStatus);
     }
 
+    // Exclude committees that already have members (those are managed under Kepanitiaan)
+    // Projects are committees without member data — show all committees as projects here
     const whereSQL = whereClauses.length > 0
       ? 'WHERE ' + whereClauses.join(' AND ')
       : '';
 
     const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total FROM events e ${whereSQL}`,
+      `SELECT COUNT(*) AS total FROM committees c ${whereSQL}`,
       params
     );
     const totalPages = Math.ceil(total / limit);
 
     const [projects] = await db.query(
-      `SELECT e.id, e.title, e.slug, e.event_type, e.delivery_mode,
-              e.start_date, e.end_date, e.status, e.quota, e.created_at,
-              emp.name AS creator_name
-       FROM events e
-       LEFT JOIN employees emp ON e.created_by = emp.id
+      `SELECT c.id, c.name, c.status, c.start_date, c.end_date, c.objective,
+              c.description, c.created_at,
+              emp.name AS creator_name,
+              (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) AS member_count
+       FROM committees c
+       LEFT JOIN employees emp ON c.created_by = emp.id
        ${whereSQL}
-       ORDER BY e.created_at DESC
+       ORDER BY c.created_at DESC
        LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
 
     res.render('projects/index', {
-      title: 'Manajemen Proyek',
+      title: 'Kelola Proyek',
       user: req.session.userName,
       projects,
       pagination: { page, totalPages, total, limit },
-      filters: { search, event_type: filterType, status: filterStatus },
+      filters: { search, status: filterStatus },
+      query: req.query,
     });
   } catch (err) {
     next(err);
@@ -134,38 +111,24 @@ const store = async (req, res, next) => {
       });
     }
 
-    const {
-      title, description, objectives, event_type, delivery_mode,
-      start_date, end_date, start_time, end_time, venue,
-      online_platform, online_link, quota, registration_deadline, status,
-    } = req.body;
-
-    // Generate unique slug
-    let slug = generateSlug(title.trim());
-    const [[{ count: slugCount }]] = await db.query(
-      'SELECT COUNT(*) AS count FROM events WHERE slug = ?', [slug]
-    );
-    if (slugCount > 0) slug = `${slug}-${Date.now()}`;
-
+    const { name, description, objective, start_date, end_date, status } = req.body;
     const createdBy = req.session.employeeId || 1;
 
     await db.query(
-      `INSERT INTO events
-         (title, slug, description, objectives, event_type, delivery_mode,
-          start_date, end_date, start_time, end_time, venue, online_platform,
-          online_link, quota, registration_deadline, status, created_by,
-          created_by_id, published_by_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      `INSERT INTO committees
+         (name, description, objective,
+          start_date, end_date, status,
+          created_by, employee_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
-        title.trim(), slug,
-        description || null, objectives || null,
-        event_type, delivery_mode,
-        start_date, end_date,
-        start_time || null, end_time || null,
-        venue || null, online_platform || null, online_link || null,
-        quota ? parseInt(quota) : null,
-        registration_deadline || null,
-        status, createdBy, createdBy, createdBy,
+        name.trim(),
+        description || null,
+        objective.trim(),
+        start_date,
+        end_date || null,
+        status,
+        createdBy,
+        createdBy,
       ]
     );
 
@@ -179,10 +142,10 @@ const store = async (req, res, next) => {
 const show = async (req, res, next) => {
   try {
     const [rows] = await db.query(
-      `SELECT e.*, emp.name AS creator_name
-       FROM events e
-       LEFT JOIN employees emp ON e.created_by = emp.id
-       WHERE e.id = ?`,
+      `SELECT c.*, emp.name AS creator_name
+       FROM committees c
+       LEFT JOIN employees emp ON c.created_by = emp.id
+       WHERE c.id = ?`,
       [req.params.id]
     );
 
@@ -193,10 +156,17 @@ const show = async (req, res, next) => {
       });
     }
 
+    const [memberCount] = await db.query(
+      'SELECT COUNT(*) AS total FROM committee_members WHERE committee_id = ?',
+      [req.params.id]
+    );
+
     res.render('projects/show', {
-      title: rows[0].title,
+      title: rows[0].name,
       user: req.session.userName,
       project: rows[0],
+      memberCount: memberCount[0].total,
+      query: req.query,
     });
   } catch (err) {
     next(err);
@@ -206,7 +176,7 @@ const show = async (req, res, next) => {
 // GET /projects/:id/edit
 const edit = async (req, res, next) => {
   try {
-    const [rows] = await db.query('SELECT * FROM events WHERE id = ?', [req.params.id]);
+    const [rows] = await db.query('SELECT * FROM committees WHERE id = ?', [req.params.id]);
 
     if (rows.length === 0) {
       return res.status(404).render('error', {
@@ -230,7 +200,7 @@ const edit = async (req, res, next) => {
 const update = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const [existing] = await db.query('SELECT * FROM events WHERE id = ?', [id]);
+    const [existing] = await db.query('SELECT * FROM committees WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).render('error', {
         message: 'Proyek tidak ditemukan.',
@@ -248,42 +218,22 @@ const update = async (req, res, next) => {
       });
     }
 
-    const {
-      title, description, objectives, event_type, delivery_mode,
-      start_date, end_date, start_time, end_time, venue,
-      online_platform, online_link, quota, registration_deadline, status,
-    } = req.body;
-
-    // Regenerate slug only if title changed
-    let slug = existing[0].slug;
-    if (title.trim() !== existing[0].title) {
-      slug = generateSlug(title.trim());
-      const [[{ count: slugCount }]] = await db.query(
-        'SELECT COUNT(*) AS count FROM events WHERE slug = ? AND id != ?', [slug, id]
-      );
-      if (slugCount > 0) slug = `${slug}-${Date.now()}`;
-    }
+    const { name, description, objective, start_date, end_date, status } = req.body;
 
     await db.query(
-      `UPDATE events SET
-         title = ?, slug = ?, description = ?, objectives = ?,
-         event_type = ?, delivery_mode = ?,
+      `UPDATE committees SET
+         name = ?, description = ?, objective = ?,
          start_date = ?, end_date = ?,
-         start_time = ?, end_time = ?,
-         venue = ?, online_platform = ?, online_link = ?,
-         quota = ?, registration_deadline = ?,
          status = ?, updated_at = NOW()
        WHERE id = ?`,
       [
-        title.trim(), slug,
-        description || null, objectives || null,
-        event_type, delivery_mode,
-        start_date, end_date,
-        start_time || null, end_time || null,
-        venue || null, online_platform || null, online_link || null,
-        quota ? parseInt(quota) : null,
-        registration_deadline || null,
-        status, id,
+        name.trim(),
+        description || null,
+        objective.trim(),
+        start_date,
+        end_date || null,
+        status,
+        id,
       ]
     );
 
@@ -296,14 +246,23 @@ const update = async (req, res, next) => {
 // POST /projects/:id/delete
 const destroy = async (req, res, next) => {
   try {
-    await db.query('DELETE FROM events WHERE id = ?', [req.params.id]);
+    const { id } = req.params;
+    // Only delete if no committee members are attached
+    const [[{ total }]] = await db.query(
+      'SELECT COUNT(*) AS total FROM committee_members WHERE committee_id = ?', [id]
+    );
+    if (total > 0) {
+      // Redirect back with error message — cannot delete a project that has members
+      return res.redirect(`/projects?error=has_members`);
+    }
+    await db.query('DELETE FROM committees WHERE id = ?', [id]);
     res.redirect('/projects');
   } catch (err) {
     next(err);
   }
 };
 
-// ─── REST API Controllers ────────────────────────────────────────────────────
+// ─── REST API Controllers ─────────────────────────────────────────────────────
 
 // GET /api/projects
 const apiIndex = async (req, res) => {
@@ -315,13 +274,10 @@ const apiIndex = async (req, res) => {
 
     const whereClauses = [];
     const params = [];
+
     if (search) {
-      whereClauses.push('(title LIKE ? OR description LIKE ?)');
-      params.push(`%${search}%`, `%${search}%`);
-    }
-    if (req.query.event_type) {
-      whereClauses.push('event_type = ?');
-      params.push(req.query.event_type);
+      whereClauses.push('(name LIKE ? OR description LIKE ? OR objective LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (req.query.status) {
       whereClauses.push('status = ?');
@@ -333,14 +289,13 @@ const apiIndex = async (req, res) => {
       : '';
 
     const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total FROM events ${whereSQL}`, params
+      `SELECT COUNT(*) AS total FROM committees ${whereSQL}`, params
     );
     const totalPages = Math.ceil(total / limit);
 
     const [projects] = await db.query(
-      `SELECT id, title, slug, event_type, delivery_mode,
-              start_date, end_date, status, quota, created_at
-       FROM events ${whereSQL}
+      `SELECT id, name, description, objective, start_date, end_date, status, created_at
+       FROM committees ${whereSQL}
        ORDER BY created_at DESC
        LIMIT ? OFFSET ?`,
       [...params, limit, offset]
@@ -360,7 +315,13 @@ const apiIndex = async (req, res) => {
 // GET /api/projects/:id
 const apiShow = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM events WHERE id = ?', [req.params.id]);
+    const [rows] = await db.query(
+      `SELECT c.*, emp.name AS creator_name
+       FROM committees c
+       LEFT JOIN employees emp ON c.created_by = emp.id
+       WHERE c.id = ?`,
+      [req.params.id]
+    );
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Project not found', data: null });
     }
@@ -378,41 +339,28 @@ const apiStore = async (req, res) => {
       return res.status(422).json({ success: false, message: errors.join('; '), data: null });
     }
 
-    const {
-      title, description, objectives, event_type, delivery_mode,
-      start_date, end_date, start_time, end_time, venue,
-      online_platform, online_link, quota, registration_deadline, status,
-    } = req.body;
-
-    let slug = generateSlug(title.trim());
-    const [[{ count: slugCount }]] = await db.query(
-      'SELECT COUNT(*) AS count FROM events WHERE slug = ?', [slug]
-    );
-    if (slugCount > 0) slug = `${slug}-${Date.now()}`;
-
+    const { name, description, objective, start_date, end_date, status } = req.body;
     const createdBy = 1;
 
     const [result] = await db.query(
-      `INSERT INTO events
-         (title, slug, description, objectives, event_type, delivery_mode,
-          start_date, end_date, start_time, end_time, venue, online_platform,
-          online_link, quota, registration_deadline, status, created_by,
-          created_by_id, published_by_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      `INSERT INTO committees
+         (name, description, objective,
+          start_date, end_date, status,
+          created_by, employee_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
-        title.trim(), slug,
-        description || null, objectives || null,
-        event_type, delivery_mode,
-        start_date, end_date,
-        start_time || null, end_time || null,
-        venue || null, online_platform || null, online_link || null,
-        quota ? parseInt(quota) : null,
-        registration_deadline || null,
-        status, createdBy, createdBy, createdBy,
+        name.trim(),
+        description || null,
+        objective.trim(),
+        start_date,
+        end_date || null,
+        status,
+        createdBy,
+        createdBy,
       ]
     );
 
-    const [newProject] = await db.query('SELECT * FROM events WHERE id = ?', [result.insertId]);
+    const [newProject] = await db.query('SELECT * FROM committees WHERE id = ?', [result.insertId]);
     res.status(201).json({
       success: true,
       message: 'Project created successfully',

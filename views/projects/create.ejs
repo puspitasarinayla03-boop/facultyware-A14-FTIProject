@@ -7,7 +7,7 @@
 
 <main id="content">
 
-  <%# ── Page Header ─────────────────────────────────────────────────────────── %>
+  <%# ── Page Header ──────────────────────────────────────────────────────────── %>
   <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
     <button type="button"
             onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))"
@@ -71,41 +71,16 @@
         <%# ── Informasi Dasar ─────────────────────────────────────────────────── %>
         <div class="card">
           <header>
-            <h2>Informasi Dasar</h2>
+            <h2>Informasi Proyek / Kegiatan</h2>
             <p>Detail utama tentang proyek atau kegiatan yang akan dilaksanakan.</p>
           </header>
 
-          <section class="grid gap-6">
+          <section class="grid gap-5">
             <div class="grid gap-2">
-              <label for="title">Judul Proyek <span class="text-destructive">*</span></label>
-              <input type="text" id="title" name="title" class="input w-full"
-                     value="<%= old.title || '' %>"
-                     placeholder="Masukkan judul proyek..." required maxlength="255" />
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="grid gap-2">
-                <label for="event_type">Tipe Kegiatan <span class="text-destructive">*</span></label>
-                <select id="event_type" name="event_type" class="select w-full" required>
-                  <option value="">Pilih tipe...</option>
-                  <option value="seminar"    <%= old.event_type === 'seminar'    ? 'selected' : '' %>>Seminar</option>
-                  <option value="workshop"   <%= old.event_type === 'workshop'   ? 'selected' : '' %>>Workshop</option>
-                  <option value="training"   <%= old.event_type === 'training'   ? 'selected' : '' %>>Training</option>
-                  <option value="conference" <%= old.event_type === 'conference' ? 'selected' : '' %>>Conference</option>
-                  <option value="webinar"    <%= old.event_type === 'webinar'    ? 'selected' : '' %>>Webinar</option>
-                  <option value="other"      <%= old.event_type === 'other'      ? 'selected' : '' %>>Lainnya</option>
-                </select>
-              </div>
-
-              <div class="grid gap-2">
-                <label for="delivery_mode">Mode Pelaksanaan <span class="text-destructive">*</span></label>
-                <select id="delivery_mode" name="delivery_mode" class="select w-full" required>
-                  <option value="">Pilih mode...</option>
-                  <option value="offline" <%= old.delivery_mode === 'offline' ? 'selected' : '' %>>Offline</option>
-                  <option value="online"  <%= old.delivery_mode === 'online'  ? 'selected' : '' %>>Online</option>
-                  <option value="hybrid"  <%= old.delivery_mode === 'hybrid'  ? 'selected' : '' %>>Hybrid</option>
-                </select>
-              </div>
+              <label for="name">Nama Kegiatan <span class="text-destructive">*</span></label>
+              <input type="text" id="name" name="name" class="input w-full"
+                     value="<%= old.name || '' %>"
+                     placeholder="Masukkan nama proyek atau kegiatan..." required maxlength="255" />
             </div>
 
             <div class="grid gap-2">
@@ -115,20 +90,20 @@
             </div>
 
             <div class="grid gap-2">
-              <label for="objectives">Tujuan Kegiatan</label>
-              <textarea id="objectives" name="objectives" class="input w-full min-h-[80px] py-2"
-                        placeholder="Apa yang ingin dicapai dari kegiatan ini?"><%= old.objectives || '' %></textarea>
+              <label for="objective">Tujuan Kegiatan <span class="text-destructive">*</span></label>
+              <textarea id="objective" name="objective" class="input w-full min-h-[80px] py-2"
+                        placeholder="Apa yang ingin dicapai dari kegiatan ini?" required><%= old.objective || '' %></textarea>
             </div>
           </section>
         </div>
 
-        <%# ── Jadwal & Tempat ────────────────────────────────────────────────── %>
+        <%# ── Jadwal ─────────────────────────────────────────────────────────── %>
         <div class="card">
           <header>
-            <h2>Jadwal & Lokasi</h2>
+            <h2>Jadwal Pelaksanaan</h2>
           </header>
 
-          <section class="grid gap-6">
+          <section class="grid gap-5">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="grid gap-2">
                 <label for="start_date">Tanggal Mulai <span class="text-destructive">*</span></label>
@@ -136,71 +111,28 @@
                        value="<%= old.start_date || '' %>" required />
               </div>
               <div class="grid gap-2">
-                <label for="end_date">Tanggal Selesai <span class="text-destructive">*</span></label>
+                <label for="end_date">Tanggal Selesai</label>
                 <input type="date" id="end_date" name="end_date" class="input w-full"
-                       value="<%= old.end_date || '' %>" required />
-              </div>
-              <div class="grid gap-2">
-                <label for="start_time">Jam Mulai</label>
-                <input type="time" id="start_time" name="start_time" class="input w-full"
-                       value="<%= old.start_time || '' %>" />
-              </div>
-              <div class="grid gap-2">
-                <label for="end_time">Jam Selesai</label>
-                <input type="time" id="end_time" name="end_time" class="input w-full"
-                       value="<%= old.end_time || '' %>" />
-              </div>
-            </div>
-
-            <div class="grid gap-2 mt-2">
-              <label for="venue">Lokasi / Venue (Offline)</label>
-              <input type="text" id="venue" name="venue" class="input w-full"
-                     value="<%= old.venue || '' %>" placeholder="Gedung, ruangan, atau alamat..." />
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="grid gap-2">
-                <label for="online_platform">Platform Online</label>
-                <input type="text" id="online_platform" name="online_platform" class="input w-full"
-                       value="<%= old.online_platform || '' %>" placeholder="Zoom, Google Meet, dll..." />
-              </div>
-              <div class="grid gap-2">
-                <label for="online_link">Link Online</label>
-                <input type="url" id="online_link" name="online_link" class="input w-full"
-                       value="<%= old.online_link || '' %>" placeholder="https://..." />
+                       value="<%= old.end_date || '' %>" />
               </div>
             </div>
           </section>
         </div>
 
-        <%# ── Peserta & Status ───────────────────────────────────────────────── %>
+        <%# ── Status ─────────────────────────────────────────────────────────── %>
         <div class="card">
           <header>
-            <h2>Peserta & Pengaturan</h2>
+            <h2>Status</h2>
           </header>
-
-          <section class="grid gap-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="grid gap-2">
-                <label for="quota">Kuota Peserta</label>
-                <input type="number" id="quota" name="quota" min="1" class="input w-full"
-                       value="<%= old.quota || '' %>" placeholder="Kosongkan jika tidak terbatas" />
-              </div>
-              <div class="grid gap-2">
-                <label for="registration_deadline">Deadline Pendaftaran</label>
-                <input type="datetime-local" id="registration_deadline" name="registration_deadline"
-                       class="input w-full" value="<%= old.registration_deadline || '' %>" />
-              </div>
-            </div>
-
-            <div class="grid gap-2 mt-2">
-              <label for="status">Status <span class="text-destructive">*</span></label>
+          <section>
+            <div class="grid gap-2">
+              <label for="status">Status Kegiatan <span class="text-destructive">*</span></label>
               <select id="status" name="status" class="select w-full" required>
                 <option value="">Pilih status...</option>
                 <option value="draft"     <%= (old.status || 'draft') === 'draft'     ? 'selected' : '' %>>Draft</option>
-                <option value="published" <%= old.status === 'published' ? 'selected' : '' %>>Published</option>
-                <option value="closed"    <%= old.status === 'closed'    ? 'selected' : '' %>>Closed</option>
-                <option value="cancelled" <%= old.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                <option value="active"    <%= old.status === 'active'    ? 'selected' : '' %>>Aktif</option>
+                <option value="completed" <%= old.status === 'completed' ? 'selected' : '' %>>Selesai</option>
+                <option value="cancelled" <%= old.status === 'cancelled' ? 'selected' : '' %>>Dibatalkan</option>
               </select>
             </div>
           </section>

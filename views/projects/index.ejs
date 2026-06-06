@@ -7,7 +7,6 @@
 
 <main id="content">
 
-  <%# ── Page Header ─────────────────────────────────────────────────────────── %>
   <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
     <button type="button"
             onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))"
@@ -15,37 +14,26 @@
             class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="12" x2="21" y2="12"/>
-        <line x1="3" y1="6"  x2="21" y2="6"/>
-        <line x1="3" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
     </button>
-
     <div class="flex flex-1 items-center gap-4">
-      <h1 class="text-base font-semibold">Manajemen Proyek</h1>
-      <span class="text-muted-foreground text-sm hidden sm:inline">(<%= pagination.total %> proyek)</span>
+      <h1 class="text-base font-semibold">Kelola Proyek</h1>
+      <span class="text-muted-foreground text-sm hidden sm:inline">(<%= pagination.total %> kegiatan)</span>
     </div>
-
     <div class="ml-auto flex items-center gap-2">
       <button type="button" aria-label="Toggle dark mode"
               onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))"
-              class="btn-icon-outline size-8 hidden sm:inline-flex">
-        <span class="hidden dark:block">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
-          </svg>
-        </span>
-        <span class="block dark:hidden">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-          </svg>
-        </span>
+              class="btn-icon-outline size-8 flex items-center justify-center shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
       </button>
-
       <a href="/projects/create"
          hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
-         class="btn-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+         class="btn btn-sm gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 5v14"/><path d="M5 12h14"/>
         </svg>
@@ -57,7 +45,14 @@
   <div class="p-4 md:p-6 lg:p-8">
     <div class="max-w-screen-xl mx-auto space-y-6">
 
-      <%# ── Filters & Search ────────────────────────────────────────────────────── %>
+      <%# ── Error message from delete attempt ── %>
+      <% if (typeof query !== 'undefined' && query && query.error === 'has_members') { %>
+      <div class="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        Proyek ini tidak dapat dihapus karena sudah memiliki anggota kepanitiaan. Hapus anggotanya terlebih dahulu di menu Kepanitiaan.
+      </div>
+      <% } %>
+
+      <%# ── Filters & Search ── %>
       <div class="card p-4">
         <form method="GET" action="/projects" class="flex flex-wrap items-center gap-3">
           <div class="relative flex-1 min-w-[200px] max-w-sm">
@@ -67,37 +62,27 @@
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input type="text" name="search"
-                   placeholder="Cari proyek..."
+                   placeholder="Cari nama atau tujuan kegiatan..."
                    value="<%= filters.search %>"
                    class="input pl-8 h-9 text-sm w-full" />
           </div>
 
-          <select name="event_type" class="select h-9 text-sm w-40">
-            <option value="">Semua Tipe</option>
-            <option value="seminar"    <%= filters.event_type === 'seminar'    ? 'selected' : '' %>>Seminar</option>
-            <option value="workshop"   <%= filters.event_type === 'workshop'   ? 'selected' : '' %>>Workshop</option>
-            <option value="training"   <%= filters.event_type === 'training'   ? 'selected' : '' %>>Training</option>
-            <option value="conference" <%= filters.event_type === 'conference' ? 'selected' : '' %>>Conference</option>
-            <option value="webinar"    <%= filters.event_type === 'webinar'    ? 'selected' : '' %>>Webinar</option>
-            <option value="other"      <%= filters.event_type === 'other'      ? 'selected' : '' %>>Lainnya</option>
-          </select>
-
           <select name="status" class="select h-9 text-sm w-36">
             <option value="">Semua Status</option>
             <option value="draft"     <%= filters.status === 'draft'     ? 'selected' : '' %>>Draft</option>
-            <option value="published" <%= filters.status === 'published' ? 'selected' : '' %>>Published</option>
-            <option value="closed"    <%= filters.status === 'closed'    ? 'selected' : '' %>>Closed</option>
-            <option value="cancelled" <%= filters.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+            <option value="active"    <%= filters.status === 'active'    ? 'selected' : '' %>>Aktif</option>
+            <option value="completed" <%= filters.status === 'completed' ? 'selected' : '' %>>Selesai</option>
+            <option value="cancelled" <%= filters.status === 'cancelled' ? 'selected' : '' %>>Dibatalkan</option>
           </select>
 
-          <button type="submit" class="btn-sm-outline h-9">Filter</button>
-          <% if (filters.search || filters.event_type || filters.status) { %>
-            <a href="/projects" class="btn-sm-ghost h-9 text-muted-foreground">Reset</a>
+          <button type="submit" class="btn btn-sm h-9">Filter</button>
+          <% if (filters.search || filters.status) { %>
+            <a href="/projects" class="btn-ghost btn-sm h-9 text-muted-foreground">Reset</a>
           <% } %>
         </form>
       </div>
 
-      <%# ── Table ───────────────────────────────────────────────────────────────── %>
+      <%# ── Table ── %>
       <div class="card overflow-hidden">
         <% if (projects.length === 0) { %>
           <div class="flex flex-col items-center justify-center py-24 text-center gap-4">
@@ -112,15 +97,15 @@
             <div>
               <p class="font-medium text-sm">Belum ada proyek</p>
               <p class="text-muted-foreground text-xs mt-1">
-                <%= filters.search || filters.event_type || filters.status
+                <%= filters.search || filters.status
                   ? 'Tidak ada proyek yang sesuai dengan filter.'
-                  : 'Mulai dengan membuat proyek pertama Anda.' %>
+                  : 'Mulai dengan membuat proyek/kegiatan pertama Anda.' %>
               </p>
             </div>
-            <% if (!filters.search && !filters.event_type && !filters.status) { %>
+            <% if (!filters.search && !filters.status) { %>
               <a href="/projects/create"
                  hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
-                 class="btn-sm">Buat Proyek Pertama</a>
+                 class="btn btn-sm">Buat Proyek Pertama</a>
             <% } %>
           </div>
         <% } else { %>
@@ -128,63 +113,52 @@
             <table class="w-full text-sm">
               <thead class="bg-muted/40 border-b">
                 <tr>
-                  <th class="text-left px-4 py-3 font-medium text-muted-foreground">#</th>
-                  <th class="text-left px-4 py-3 font-medium text-muted-foreground">Judul Proyek</th>
-                  <th class="text-left px-4 py-3 font-medium text-muted-foreground">Tipe</th>
-                  <th class="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Mode</th>
-                  <th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Tanggal</th>
-                  <th class="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                  <th class="text-right px-4 py-3 font-medium text-muted-foreground">Aksi</th>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground w-10">#</th>
+                  <th class="text-left px-4 py-3 font-medium text-muted-foreground">Nama Kegiatan</th>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Tanggal</th>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Panitia</th>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground">Aksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y">
                 <% projects.forEach((p, i) => {
                   const statusMap = {
-                    draft: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
-                    published: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
-                    closed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+                    draft:     'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
+                    active:    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+                    completed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
                     cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
                   };
-                  const typeMap = {
-                    seminar: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400',
-                    workshop: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
-                    training: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',
-                    conference: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
-                    webinar: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400',
-                    other: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
-                  };
+                  const statusLabels = { draft: 'Draft', active: 'Aktif', completed: 'Selesai', cancelled: 'Dibatalkan' };
                   const offset = (pagination.page - 1) * pagination.limit;
                 %>
                 <tr class="hover:bg-muted/30 transition-colors">
-                  <td class="px-4 py-3 text-muted-foreground text-xs"><%= offset + i + 1 %></td>
+                  <td class="px-4 py-3 text-muted-foreground text-xs text-center"><%= offset + i + 1 %></td>
                   <td class="px-4 py-3">
                     <a href="/projects/<%= p.id %>"
                        hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
-                       class="font-medium hover:text-primary transition-colors block truncate max-w-[200px] md:max-w-xs">
-                      <%= p.title %>
+                       class="font-medium hover:text-primary transition-colors block truncate max-w-[240px]">
+                      <%= p.name %>
                     </a>
-                    <p class="text-xs text-muted-foreground mt-0.5 truncate max-w-[200px]">
+                    <p class="text-xs text-muted-foreground mt-0.5 truncate max-w-[240px]">
                       oleh <%= p.creator_name || '—' %>
                     </p>
                   </td>
-                  <td class="px-4 py-3">
-                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize <%= typeMap[p.event_type] || '' %>">
-                      <%= p.event_type %>
-                    </span>
+                  <td class="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap text-center hidden sm:table-cell">
+                    <% const sd = p.start_date ? new Date(p.start_date).toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'}) : '—'; %>
+                    <% const ed = p.end_date   ? new Date(p.end_date).toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'}) : '—'; %>
+                    <%= sd %><% if (p.end_date) { %><br/><span class="text-muted-foreground/60">s/d <%= ed %></span><% } %>
                   </td>
-                  <td class="px-4 py-3 text-muted-foreground capitalize text-xs hidden md:table-cell"><%= p.delivery_mode %></td>
-                  <td class="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap hidden sm:table-cell">
-                    <% const sd = new Date(p.start_date).toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'}); %>
-                    <% const ed = new Date(p.end_date).toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'}); %>
-                    <%= sd %> — <%= ed %>
+                  <td class="px-4 py-3 text-center hidden md:table-cell">
+                    <span class="text-xs font-medium"><%= p.member_count %> org</span>
                   </td>
-                  <td class="px-4 py-3">
-                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize <%= statusMap[p.status] || '' %>">
-                      <%= p.status %>
+                  <td class="px-4 py-3 text-center">
+                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium <%= statusMap[p.status] || '' %>">
+                      <%= statusLabels[p.status] || p.status %>
                     </span>
                   </td>
                   <td class="px-4 py-3">
-                    <div class="flex items-center justify-end gap-1">
+                    <div class="flex items-center justify-center gap-1">
                       <a href="/projects/<%= p.id %>"
                          hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
                          class="btn-sm-icon-ghost size-7" title="Lihat Detail">
@@ -196,13 +170,23 @@
                       </a>
                       <a href="/projects/<%= p.id %>/edit"
                          hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
-                         class="btn-sm-icon-ghost size-7" title="Edit">
+                         class="btn-sm-icon-ghost size-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30" title="Edit">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/>
                         </svg>
                       </a>
+                      <form method="POST" action="/projects/<%= p.id %>/delete" class="inline-block m-0">
+                        <button type="button" onclick="showDeleteModal(this.closest('form'))"
+                                class="btn-sm-icon-ghost size-7 text-destructive hover:bg-destructive/10" title="Hapus">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
+                        </button>
+                      </form>
                     </div>
                   </td>
                 </tr>
@@ -211,7 +195,7 @@
             </table>
           </div>
 
-          <%# ── Pagination ───────────────────────────────────────────────────────── %>
+          <%# ── Pagination ── %>
           <% if (pagination.totalPages > 1) { %>
           <div class="border-t p-4 flex items-center justify-between text-sm">
             <p class="text-muted-foreground text-xs hidden sm:block">
@@ -220,22 +204,20 @@
             </p>
             <nav class="flex items-center gap-1">
               <% if (pagination.page > 1) { %>
-                <a href="/projects?page=<%= pagination.page - 1 %>&search=<%= filters.search %>&event_type=<%= filters.event_type %>&status=<%= filters.status %>"
-                   class="btn-sm-outline h-7 px-2 text-xs">‹</a>
+                <a href="/projects?page=<%= pagination.page - 1 %>&search=<%= filters.search %>&status=<%= filters.status %>"
+                   class="btn-outline btn-sm h-7 px-2 text-xs">‹</a>
               <% } %>
-
               <% for (let i = 1; i <= pagination.totalPages; i++) { %>
                 <% if (Math.abs(i - pagination.page) <= 2) { %>
-                  <a href="/projects?page=<%= i %>&search=<%= filters.search %>&event_type=<%= filters.event_type %>&status=<%= filters.status %>"
-                     class="<%= i === pagination.page ? 'btn-sm h-7 px-2.5 text-xs' : 'btn-sm-outline h-7 px-2.5 text-xs' %>">
+                  <a href="/projects?page=<%= i %>&search=<%= filters.search %>&status=<%= filters.status %>"
+                     class="<%= i === pagination.page ? 'btn btn-sm h-7 px-2.5 text-xs' : 'btn-outline btn-sm h-7 px-2.5 text-xs' %>">
                     <%= i %>
                   </a>
                 <% } %>
               <% } %>
-
               <% if (pagination.page < pagination.totalPages) { %>
-                <a href="/projects?page=<%= pagination.page + 1 %>&search=<%= filters.search %>&event_type=<%= filters.event_type %>&status=<%= filters.status %>"
-                   class="btn-sm-outline h-7 px-2 text-xs">›</a>
+                <a href="/projects?page=<%= pagination.page + 1 %>&search=<%= filters.search %>&status=<%= filters.status %>"
+                   class="btn-outline btn-sm h-7 px-2 text-xs">›</a>
               <% } %>
             </nav>
           </div>
@@ -246,6 +228,31 @@
     </div>
   </div>
 </main>
+
+<%# ── Delete Confirmation Modal ── %>
+<dialog id="delete-modal" class="dialog">
+  <div class="dialog-content max-w-sm">
+    <header class="dialog-header">
+      <h2 class="dialog-title">Hapus Proyek?</h2>
+      <p class="dialog-description">Tindakan ini tidak dapat dibatalkan. Data proyek akan dihapus permanen.</p>
+    </header>
+    <footer class="dialog-footer">
+      <button type="button" class="btn-outline" onclick="document.getElementById('delete-modal').close()">Batal</button>
+      <button type="button" id="confirm-delete-btn" class="btn bg-destructive text-white hover:bg-destructive/90">Hapus</button>
+    </footer>
+  </div>
+</dialog>
+
+<script>
+  let _deleteForm = null;
+  function showDeleteModal(form) {
+    _deleteForm = form;
+    document.getElementById('delete-modal').showModal();
+  }
+  document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+    if (_deleteForm) _deleteForm.submit();
+  });
+</script>
 
 <%- include('../partials/_scripts') %>
 </body>
