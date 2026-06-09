@@ -45,9 +45,10 @@ const login = async (req, res, next) => {
       "SELECT id FROM employees WHERE id = ?", [user.id]
     );
 
-    // Set session
+    // Set session — userName diberi fallback ke email/Admin agar sidebar tidak error
+    // jika kolom `name` di tabel users bernilai null/kosong (Fix #3 - Flow 2)
     req.session.userId     = user.id;
-    req.session.userName   = user.name;
+    req.session.userName   = user.name || user.email || 'Admin';
     req.session.userEmail  = user.email;
     req.session.employeeId = empRows.length > 0 ? empRows[0].id : null;
 

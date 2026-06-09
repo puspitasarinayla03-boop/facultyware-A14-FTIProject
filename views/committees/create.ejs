@@ -24,10 +24,18 @@
     <button type="button" aria-label="Toggle dark mode"
             onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))"
             class="btn-icon-outline size-8 flex items-center justify-center shrink-0 ml-auto">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-      </svg>
+      <span class="hidden dark:block">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+      </span>
+      <span class="block dark:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+        </svg>
+      </span>
     </button>
   </header>
 
@@ -150,86 +158,86 @@
       <% } %>
     </div>
   </div>
+
+  <script>
+    const EMPLOYEES = <%- JSON.stringify(employees.map(e => ({ id: e.id, name: e.name, nip: e.employee_number }))) %>;
+
+    function buildEmployeeOptions(selectedId) {
+      return EMPLOYEES.map(e =>
+        `<option value="${e.id}" ${selectedId == e.id ? 'selected' : ''}>${e.name} (${e.nip || '-'})</option>`
+      ).join('');
+    }
+
+    function buildRoleOptions(selectedRole) {
+      const roles = ['Ketua','Wakil Ketua','Sekretaris','Bendahara','Seksi Acara','Seksi Humas','Seksi Perlengkapan','Seksi Konsumsi','Seksi Dokumentasi','Anggota'];
+      return roles.map(r => `<option value="${r}" ${selectedRole === r ? 'selected' : ''}>${r}</option>`).join('');
+    }
+
+    function addInternalRow(empId='', role='') {
+      const container = document.getElementById('internal-members-container');
+      const div = document.createElement('div');
+      div.className = 'flex flex-wrap items-end gap-3 p-3 rounded-lg border bg-muted/20';
+      div.innerHTML = `
+        <div style="flex: 2; min-width: 200px;">
+          <label class="label text-xs mb-1">Pegawai</label>
+          <select name="internal_employee_id[]" class="select w-full text-sm" required>
+            <option value="">-- Pilih Pegawai --</option>
+            ${buildEmployeeOptions(empId)}
+          </select>
+        </div>
+        <div style="flex: 2; min-width: 150px;">
+          <label class="label text-xs mb-1">Jabatan/Peran</label>
+          <select name="internal_role[]" class="select w-full text-sm" required>
+            <option value="">-- Pilih Peran --</option>
+            ${buildRoleOptions(role)}
+          </select>
+        </div>
+        <div style="flex: 0 0 auto;">
+          <button type="button" onclick="this.closest('div.flex').remove()"
+                  class="btn-ghost text-destructive hover:bg-destructive/10 size-8 flex items-center justify-center p-0 rounded-md" title="Hapus">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>`;
+      container.appendChild(div);
+    }
+
+    function addExternalRow(name='', institution='', role='') {
+      const container = document.getElementById('external-members-container');
+      const div = document.createElement('div');
+      div.className = 'flex flex-wrap items-end gap-3 p-3 rounded-lg border bg-muted/20';
+      div.innerHTML = `
+        <div style="flex: 2; min-width: 150px;">
+          <label class="label text-xs mb-1">Nama Lengkap</label>
+          <input type="text" name="external_name[]" value="${name}" placeholder="Nama anggota..." class="input w-full text-sm" required>
+        </div>
+        <div style="flex: 2; min-width: 150px;">
+          <label class="label text-xs mb-1">Asal Institusi</label>
+          <input type="text" name="external_institution[]" value="${institution}" placeholder="Universitas / Perusahaan..." class="input w-full text-sm">
+        </div>
+        <div style="flex: 1.5; min-width: 120px;">
+          <label class="label text-xs mb-1">Jabatan/Peran</label>
+          <select name="external_role[]" class="select w-full text-sm" required>
+            <option value="">-- Pilih Peran --</option>
+            ${buildRoleOptions(role)}
+          </select>
+        </div>
+        <div style="flex: 0 0 auto;">
+          <button type="button" onclick="this.closest('div.flex').remove()"
+                  class="btn-ghost text-destructive hover:bg-destructive/10 size-8 flex items-center justify-center p-0 rounded-md" title="Hapus">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>`;
+      container.appendChild(div);
+    }
+
+    // Start with one empty internal row
+    addInternalRow();
+  </script>
 </main>
-
-<script>
-  const EMPLOYEES = <%- JSON.stringify(employees.map(e => ({ id: e.id, name: e.name, nip: e.employee_number }))) %>;
-
-  function buildEmployeeOptions(selectedId) {
-    return EMPLOYEES.map(e =>
-      `<option value="${e.id}" ${selectedId == e.id ? 'selected' : ''}>${e.name} (${e.nip || '-'})</option>`
-    ).join('');
-  }
-
-  function buildRoleOptions(selectedRole) {
-    const roles = ['Ketua','Wakil Ketua','Sekretaris','Bendahara','Seksi Acara','Seksi Humas','Seksi Perlengkapan','Seksi Konsumsi','Seksi Dokumentasi','Anggota'];
-    return roles.map(r => `<option value="${r}" ${selectedRole === r ? 'selected' : ''}>${r}</option>`).join('');
-  }
-
-  function addInternalRow(empId='', role='') {
-    const container = document.getElementById('internal-members-container');
-    const div = document.createElement('div');
-    div.className = 'flex flex-wrap items-end gap-3 p-3 rounded-lg border bg-muted/20';
-    div.innerHTML = `
-      <div style="flex: 2; min-width: 200px;">
-        <label class="label text-xs mb-1">Pegawai</label>
-        <select name="internal_employee_id[]" class="select w-full text-sm" required>
-          <option value="">-- Pilih Pegawai --</option>
-          ${buildEmployeeOptions(empId)}
-        </select>
-      </div>
-      <div style="flex: 2; min-width: 150px;">
-        <label class="label text-xs mb-1">Jabatan/Peran</label>
-        <select name="internal_role[]" class="select w-full text-sm" required>
-          <option value="">-- Pilih Peran --</option>
-          ${buildRoleOptions(role)}
-        </select>
-      </div>
-      <div style="flex: 0 0 auto;">
-        <button type="button" onclick="this.closest('div.flex').remove()"
-                class="btn-ghost text-destructive hover:bg-destructive/10 size-8 flex items-center justify-center p-0 rounded-md" title="Hapus">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-          </svg>
-        </button>
-      </div>`;
-    container.appendChild(div);
-  }
-
-  function addExternalRow(name='', institution='', role='') {
-    const container = document.getElementById('external-members-container');
-    const div = document.createElement('div');
-    div.className = 'flex flex-wrap items-end gap-3 p-3 rounded-lg border bg-muted/20';
-    div.innerHTML = `
-      <div style="flex: 2; min-width: 150px;">
-        <label class="label text-xs mb-1">Nama Lengkap</label>
-        <input type="text" name="external_name[]" value="${name}" placeholder="Nama anggota..." class="input w-full text-sm" required>
-      </div>
-      <div style="flex: 2; min-width: 150px;">
-        <label class="label text-xs mb-1">Asal Institusi</label>
-        <input type="text" name="external_institution[]" value="${institution}" placeholder="Universitas / Perusahaan..." class="input w-full text-sm">
-      </div>
-      <div style="flex: 1.5; min-width: 120px;">
-        <label class="label text-xs mb-1">Jabatan/Peran</label>
-        <select name="external_role[]" class="select w-full text-sm" required>
-          <option value="">-- Pilih Peran --</option>
-          ${buildRoleOptions(role)}
-        </select>
-      </div>
-      <div style="flex: 0 0 auto;">
-        <button type="button" onclick="this.closest('div.flex').remove()"
-                class="btn-ghost text-destructive hover:bg-destructive/10 size-8 flex items-center justify-center p-0 rounded-md" title="Hapus">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-          </svg>
-        </button>
-      </div>`;
-    container.appendChild(div);
-  }
-
-  // Start with one empty internal row
-  addInternalRow();
-</script>
 
 <%- include('../partials/_scripts') %>
 </body>

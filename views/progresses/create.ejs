@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="id">
+<%- include('../partials/_head', { title: typeof title !== 'undefined' ? title : 'Tambah Progress' }) %>
+<body class="bg-background text-foreground antialiased">
+
+<%- include('../partials/_sidebar', { user: typeof user !== 'undefined' ? user : '' }) %>
+
+<main id="content">
+
+  <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
+    <button type="button"
+            onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))"
+            aria-label="Toggle sidebar"
+            class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="6"  x2="21" y2="6"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <a href="/progresses" class="btn-sm-ghost h-7 text-muted-foreground gap-1.5 hidden sm:inline-flex">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+      Kembali
+    </a>
+    <span class="text-muted-foreground hidden sm:inline">/</span>
+    <h1 class="text-base font-semibold">Tambah Progress Project</h1>
+
+    <div class="ml-auto flex items-center gap-2">
+      <button type="button" aria-label="Toggle dark mode"
+              onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))"
+              class="btn-icon-outline size-8 flex items-center justify-center shrink-0">
+        <span class="hidden dark:block">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+        </span>
+        <span class="block dark:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </header>
+
+  <div class="p-4 md:p-6 lg:p-8">
+    <div class="max-w-2xl mx-auto space-y-6">
+
+      <!-- Error messages -->
+      <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+        <div class="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive space-y-1">
+          <% errors.forEach(function(err) { %>
+            <p>• <%= err %></p>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <!-- Form -->
+      <div class="card p-6 space-y-5">
+        <form method="POST" action="/progresses" enctype="multipart/form-data" class="space-y-5">
+
+          <!-- Task -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-medium" for="committee_task_id">
+              Task Project <span class="text-destructive">*</span>
+            </label>
+            <select id="committee_task_id" name="committee_task_id" required class="input w-full">
+              <option value="">-- Pilih Task --</option>
+              <% if (typeof tasks !== 'undefined') { %>
+                <% tasks.forEach(function(task) { %>
+                  <option value="<%= task.id %>"
+                    <%= (typeof old !== 'undefined' && old.committee_task_id == task.id) ? 'selected' : '' %>>
+                    <%= task.committee_name %> — <%= task.title %>
+                  </option>
+                <% }) %>
+              <% } %>
+            </select>
+            <% if (typeof tasks !== 'undefined' && tasks.length === 0) { %>
+              <p class="text-xs text-muted-foreground">
+                Belum ada task. Silakan buat committee dan task terlebih dahulu.
+              </p>
+            <% } %>
+          </div>
+
+          <!-- Deskripsi -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-medium" for="description">
+              Deskripsi Progress <span class="text-destructive">*</span>
+            </label>
+            <textarea id="description" name="description" rows="4" required
+                      placeholder="Jelaskan perkembangan yang sudah dilakukan..."
+                      class="input w-full resize-y"><%= (typeof old !== 'undefined' && old.description) ? old.description : '' %></textarea>
+          </div>
+
+          <!-- Status -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-medium" for="status">
+              Status <span class="text-destructive">*</span>
+            </label>
+            <select id="status" name="status" required class="input w-full">
+              <option value="">-- Pilih Status --</option>
+              <option value="in_progress"
+                <%= (typeof old !== 'undefined' && old.status === 'in_progress') ? 'selected' : '' %>>
+                Sedang Berlangsung
+              </option>
+              <option value="done"
+                <%= (typeof old !== 'undefined' && old.status === 'done') ? 'selected' : '' %>>
+                Selesai
+              </option>
+            </select>
+          </div>
+
+          <!-- Tanggal Progress -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-medium" for="progress_date">
+              Tanggal Progress <span class="text-destructive">*</span>
+            </label>
+            <input type="date" id="progress_date" name="progress_date" required
+                   value="<%= (typeof old !== 'undefined' && old.progress_date) ? old.progress_date : new Date().toISOString().split('T')[0] %>"
+                   class="input w-full"/>
+          </div>
+
+          <!-- Attachment -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-medium" for="attachment">
+              Attachment
+              <span class="text-muted-foreground text-xs font-normal">(opsional, maks 5MB — JPG/PNG/PDF)</span>
+            </label>
+            <input type="file" id="attachment" name="attachment"
+                   accept=".jpg,.jpeg,.png,.pdf"
+                   class="input w-full file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-muted/80 cursor-pointer"/>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="btn btn-sm gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              Simpan Progress
+            </button>
+            <a href="/progresses" class="btn-outline btn-sm">Batal</a>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<%- include('../partials/_scripts') %>
+</body>
+</html>

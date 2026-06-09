@@ -116,3 +116,73 @@
       }
     }
   </script>
+
+  <%# ─── [E4] HTMX Server Error Handler ─────────────────────────────────────── %>
+  <%# Menangani kondisi server backend tidak aktif / network error saat HTMX request %>
+  <%# Sesuai Flow 2 E4: server ExpressJS berhenti/crash, frontend tampilkan notifikasi %>
+  <script>
+    (function () {
+      // [E4] HTMX send error — server tidak dapat dijangkau (crash / network down)
+      document.addEventListener('htmx:sendError', function (evt) {
+        console.error('[E4] HTMX send error — server tidak aktif:', evt.detail);
+        showServerToast('Server sedang tidak tersedia. Periksa koneksi atau coba beberapa saat lagi.', 'error');
+      });
+
+      // [E4] HTMX response error — server merespons dengan status error (5xx)
+      document.addEventListener('htmx:responseError', function (evt) {
+        var status = evt.detail.xhr ? evt.detail.xhr.status : 0;
+        console.error('[E4/E3] HTMX response error — status:', status);
+
+        if (status === 0 || status >= 500) {
+          showServerToast('Server sedang tidak tersedia. Silakan coba lagi.', 'error');
+        } else if (status === 404) {
+          showServerToast('Halaman atau data tidak ditemukan (404).', 'warning');
+        } else if (status === 403 || status === 401) {
+          showServerToast('Sesi Anda telah habis. Mengarahkan ke halaman login...', 'warning');
+          setTimeout(function () { window.location.href = '/login'; }, 2000);
+        }
+      });
+
+      // [E5] HTMX timeout
+      document.addEventListener('htmx:timeout', function (evt) {
+        console.error('[E5] HTMX timeout:', evt.detail);
+        showServerToast('Permintaan melebihi batas waktu. Coba lagi.', 'error');
+      });
+
+      function showServerToast(message, type) {
+        var toaster = document.getElementById('toaster');
+        if (!toaster) { alert(message); return; }
+
+        var toast = document.createElement('div');
+        toast.setAttribute('role', 'alert');
+
+        var bgColor   = type === 'error' ? 'var(--destructive)' : '#f59e0b';
+        var textColor = 'white';
+
+        toast.style.cssText = [
+          'display:flex','align-items:center','gap:0.625rem',
+          'padding:0.75rem 1rem','border-radius:0.5rem',
+          'font-size:0.875rem','font-weight:500',
+          'background-color:' + bgColor,
+          'color:' + textColor,
+          'box-shadow:0 4px 12px rgba(0,0,0,0.2)',
+          'max-width:380px',
+        ].join(';');
+
+        var iconSvg = type === 'error'
+          ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+        toast.innerHTML = iconSvg + '<span>' + message + '</span>';
+        toaster.appendChild(toast);
+
+        setTimeout(function () {
+          toast.style.opacity = '0';
+          toast.style.transition = 'opacity 0.3s ease';
+          setTimeout(function () {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+          }, 300);
+        }, 5000);
+      }
+    })();
+  </script>

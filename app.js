@@ -14,6 +14,9 @@ var indexRouter    = require('./routes/index');
 var usersRouter    = require('./routes/users');
 var projectsRouter    = require('./routes/projects');
 var committeesRouter  = require('./routes/committees');
+var progressesRouter = require('./routes/progresses');
+var reportsRouter = require('./routes/reports');
+var dashboardRouter = require('./routes/dashboard');
 const { notFoundHandler, errorHandler } = require('./middlewares/error');
 
 var app = express();
@@ -59,6 +62,9 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/projects',    projectsRouter);
 app.use('/committees',  committeesRouter);
+app.use('/progresses', progressesRouter);
+app.use('/reports', reportsRouter);
+app.use('/dashboard', dashboardRouter);
 
 // REST API routes
 const projectController = require('./controllers/projectController');

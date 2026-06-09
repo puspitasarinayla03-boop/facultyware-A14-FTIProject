@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="id">
+<%- include('../partials/_head', { title: 'Laporan Progress Project' }) %>
+<body class="bg-background text-foreground antialiased" hx-boost="true">
+
+<%- include('../partials/_sidebar', { user: user }) %>
+
+<main id="content">
+  <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
+    <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" aria-label="Toggle sidebar" class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <div class="flex flex-1 items-center gap-4">
+      <h1 class="text-base font-semibold">Laporan Progress Project</h1>
+    </div>
+    <div class="ml-auto flex items-center gap-2">
+      <button type="button" id="export-pdf-btn" class="btn btn-sm gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <path d="M12 18v-6M9 15l3 3 3-3"/>
+        </svg>
+        Export PDF
+      </button>
+      <button type="button" id="export-docx-btn" class="btn-outline btn-sm gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <path d="M12 18v-6M9 15l3 3 3-3"/>
+        </svg>
+        Export DOCX
+      </button>
+      <button type="button" aria-label="Toggle dark mode" onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))" class="btn-icon-outline size-8 flex items-center justify-center shrink-0">
+        <span class="hidden dark:block">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+        </span>
+        <span class="block dark:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </header>
+
+  <div class="p-4 md:p-6 lg:p-8 bg-muted/20 min-h-[calc(100vh-3.5rem)]">
+    <div class="max-w-screen-xl mx-auto space-y-6">
+
+      <!-- Error Notification Bar -->
+      <div id="error-container" class="hidden rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-center justify-between">
+        <span id="error-message">Terjadi kesalahan.</span>
+        <button onclick="document.getElementById('error-container').classList.add('hidden')" class="text-destructive font-bold hover:opacity-80">×</button>
+      </div>
+
+      <!-- Filters Panel -->
+      <div class="card p-5">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Filter Laporan</h2>
+        <form id="filter-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <!-- Committee -->
+          <div class="space-y-1">
+            <label for="filter-committee" class="text-xs font-medium text-muted-foreground">Kepanitiaan</label>
+            <select id="filter-committee" name="committee" class="select w-full text-xs">
+              <option value="">Semua Kepanitiaan</option>
+              <% committees.forEach(function(c) { %>
+                <option value="<%= c.id %>"><%= c.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Task -->
+          <div class="space-y-1">
+            <label for="filter-task" class="text-xs font-medium text-muted-foreground">Task Project</label>
+            <select id="filter-task" name="task" class="select w-full text-xs">
+              <option value="">Semua Task</option>
+              <% tasks.forEach(function(t) { %>
+                <option value="<%= t.id %>"><%= t.title %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div class="space-y-1">
+            <label for="filter-status" class="text-xs font-medium text-muted-foreground">Status</label>
+            <select id="filter-status" name="status" class="select w-full text-xs">
+              <option value="">Semua Status</option>
+              <option value="in_progress">Sedang Berlangsung</option>
+              <option value="done">Selesai</option>
+            </select>
+          </div>
+
+          <!-- Start Date -->
+          <div class="space-y-1">
+            <label for="filter-start-date" class="text-xs font-medium text-muted-foreground">Tanggal Mulai</label>
+            <input type="date" id="filter-start-date" name="start_date" class="input w-full text-xs" />
+          </div>
+
+          <!-- End Date -->
+          <div class="space-y-1">
+            <label for="filter-end-date" class="text-xs font-medium text-muted-foreground">Tanggal Akhir</label>
+            <input type="date" id="filter-end-date" name="end_date" class="input w-full text-xs" />
+          </div>
+        </form>
+        <div class="flex justify-end mt-4">
+          <button type="button" id="reset-filters-btn" class="btn btn-sm-ghost text-xs text-muted-foreground hover:bg-muted gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Reset Filter
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard Statistics Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Total -->
+        <div class="card p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-muted-foreground uppercase font-semibold">Total Progress</p>
+            <p id="stat-total" class="text-2xl font-bold mt-1">0</p>
+          </div>
+          <div class="size-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"/><path d="M3 20v-8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v8"/><path d="M13 20v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v8"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- In Progress -->
+        <div class="card p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-muted-foreground uppercase font-semibold">Sedang Berlangsung</p>
+            <p id="stat-in-progress" class="text-2xl font-bold mt-1">0</p>
+          </div>
+          <div class="size-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Done -->
+        <div class="card p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-muted-foreground uppercase font-semibold">Selesai</p>
+            <p id="stat-done" class="text-2xl font-bold mt-1">0</p>
+          </div>
+          <div class="size-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Content Card -->
+      <div class="card overflow-hidden relative min-h-[250px]" id="table-card">
+        <!-- Loading overlay -->
+        <div id="table-loader" class="absolute inset-0 bg-background/50 z-20 flex items-center justify-center hidden">
+          <div class="flex flex-col items-center gap-2">
+            <svg class="animate-spin size-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-xs text-muted-foreground font-medium">Memuat data laporan...</span>
+          </div>
+        </div>
+
+        <!-- Empty State Container -->
+        <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-center gap-4">
+          <div class="size-16 rounded-full bg-muted flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div class="space-y-1">
+            <p class="font-semibold text-base">Data laporan tidak ditemukan.</p>
+            <p class="text-xs text-muted-foreground">Silakan ubah filter atau tambahkan progress kegiatan baru.</p>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div id="table-container" class="overflow-x-auto w-full">
+          <table class="w-full text-sm">
+            <thead class="bg-muted/40 border-b">
+              <tr>
+                <th class="text-center px-4 py-3 font-medium text-muted-foreground w-10">#</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground">Committee</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground">Task</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground">Progress</th>
+                <th class="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th class="text-center px-4 py-3 font-medium text-muted-foreground">Tanggal</th>
+                <th class="text-center px-4 py-3 font-medium text-muted-foreground">Attachment</th>
+              </tr>
+            </thead>
+            <tbody id="report-table-body" class="divide-y">
+              <!-- Rendered dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const filterForm = document.getElementById('filter-form');
+      const tableBody = document.getElementById('report-table-body');
+      const tableLoader = document.getElementById('table-loader');
+      const emptyState = document.getElementById('empty-state');
+      const tableContainer = document.getElementById('table-container');
+      const errorContainer = document.getElementById('error-container');
+      const errorMessage = document.getElementById('error-message');
+      
+      const statTotal = document.getElementById('stat-total');
+      const statInProgress = document.getElementById('stat-in-progress');
+      const statDone = document.getElementById('stat-done');
+
+      const exportPdfBtn = document.getElementById('export-pdf-btn');
+      const exportDocxBtn = document.getElementById('export-docx-btn');
+      let currentReportData = [];
+
+      // Helper to format dates to Indonesian format
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '-';
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '-';
+        return `${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+      };
+
+      // Helper to show/hide loader
+      const setLoader = (visible) => {
+        if (visible) {
+          tableLoader.classList.remove('hidden');
+        } else {
+          tableLoader.classList.add('hidden');
+        }
+      };
+
+      // Helper to render error alert
+      const showError = (msg) => {
+        errorMessage.textContent = msg;
+        errorContainer.classList.remove('hidden');
+        // Scroll to top to see error
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const hideError = () => {
+        errorContainer.classList.add('hidden');
+      };
+
+      // Fetch and render report data
+      const fetchReports = async () => {
+        setLoader(true);
+        hideError();
+
+        const formData = new FormData(filterForm);
+        const queryParams = new URLSearchParams();
+        queryParams.append('json', '1');
+
+        for (const [key, value] of formData.entries()) {
+          if (value) queryParams.append(key, value);
+        }
+
+        try {
+          const response = await fetch(`/reports/progress?${queryParams.toString()}`);
+          
+          // Exception / Error check: Timeout or Server Crash (E5 / E7) handled by fetch fail,
+          // but if we receive non-200 HTTP status, handle explicitly
+          if (!response.ok) {
+            const errJson = await response.json().catch(() => ({}));
+            
+            // Format validation error (E3)
+            if (response.status === 400) {
+              showError('Filter laporan tidak valid.');
+            } else if (response.status === 401 || response.status === 403) {
+              // Redirect to login (E6)
+              window.location.href = '/login';
+            } else if (response.status === 504) {
+              showError('Permintaan melebihi batas waktu.');
+            } else {
+              showError('Terjadi kesalahan saat mengambil laporan.');
+            }
+            
+            // Reset stats and show empty state
+            currentReportData = [];
+            updateStats([]);
+            renderTable([]);
+            return;
+          }
+
+          const result = await response.json();
+          // E8 check: Data Response Tidak Valid
+          if (!result || typeof result.success === 'undefined' || !Array.isArray(result.data)) {
+            showError('Format data laporan tidak valid.');
+            currentReportData = [];
+            updateStats([]);
+            renderTable([]);
+            return;
+          }
+
+          currentReportData = result.data;
+          updateStats(result.data);
+          renderTable(result.data);
+
+        } catch (err) {
+          console.error('[fetchReports error]:', err);
+          // E1 (Gagal Koneksi Database) or E5 (Server Crash)
+          showError('Gagal terhubung ke database.');
+          currentReportData = [];
+          updateStats([]);
+          renderTable([]);
+        } finally {
+          setLoader(false);
+        }
+      };
+
+      // Update metrics summary cards
+      const updateStats = (data) => {
+        const total = data.length;
+        const inProgress = data.filter(item => item.status === 'in_progress').length;
+        const done = data.filter(item => item.status === 'done').length;
+
+        statTotal.textContent = total;
+        statInProgress.textContent = inProgress;
+        statDone.textContent = done;
+      };
+
+      // Render rows inside table body
+      const renderTable = (data) => {
+        tableBody.innerHTML = '';
+
+        if (data.length === 0) {
+          emptyState.classList.remove('hidden');
+          tableContainer.classList.add('hidden');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+        tableContainer.classList.remove('hidden');
+
+        data.forEach((row, i) => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-muted/30 transition-colors';
+
+          // Status Badge mapping
+          const statusBadge = row.status === 'done'
+            ? `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">Selesai</span>`
+            : `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">Sedang Berlangsung</span>`;
+
+          // Attachment Link mapping (A3 condition)
+          const attachmentCell = row.attachment
+            ? `<a href="${row.attachment}" download class="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline" title="Download lampiran">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                 </svg>
+                 Download File
+               </a>`
+            : `<span class="text-xs text-muted-foreground/60 italic">Tidak ada attachment.</span>`;
+
+          tr.innerHTML = `
+            <td class="px-4 py-3 text-muted-foreground text-xs text-center">${i + 1}</td>
+            <td class="px-4 py-3"><span class="font-medium block truncate max-w-[200px]">${row.committee_name || '-'}</span></td>
+            <td class="px-4 py-3"><span class="block truncate max-w-[200px]">${row.task_name || '-'}</span></td>
+            <td class="px-4 py-3 text-muted-foreground text-xs"><span class="block whitespace-pre-wrap">${row.description || '-'}</span></td>
+            <td class="px-4 py-3 text-center">${statusBadge}</td>
+            <td class="px-4 py-3 text-xs text-muted-foreground text-center whitespace-nowrap">${formatDate(row.progress_date)}</td>
+            <td class="px-4 py-3 text-center">${attachmentCell}</td>
+          `;
+
+          tableBody.appendChild(tr);
+        });
+      };
+
+      // Set event listeners on all form fields for auto-update
+      filterForm.addEventListener('change', fetchReports);
+
+      // Handle filters reset
+      document.getElementById('reset-filters-btn').addEventListener('click', () => {
+        filterForm.reset();
+        fetchReports();
+      });
+
+      // Handle export trigger
+      const handleExport = (format) => {
+        if (!currentReportData || currentReportData.length === 0) {
+          showError('Tidak ada data laporan untuk dicetak.');
+          return;
+        }
+
+        const formData = new FormData(filterForm);
+        const queryParams = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+          if (value) queryParams.append(key, value);
+        }
+
+        window.location.href = `/reports/progress/${format}?${queryParams.toString()}`;
+      };
+
+      exportPdfBtn.addEventListener('click', () => handleExport('pdf'));
+      exportDocxBtn.addEventListener('click', () => handleExport('docx'));
+
+      // Initial Fetch
+      fetchReports();
+
+    })();
+  </script>
+</main>
+
+<%- include('../partials/_scripts') %>
+</body>
+</html>

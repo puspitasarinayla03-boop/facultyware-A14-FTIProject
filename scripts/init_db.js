@@ -107,6 +107,95 @@ async function init() {
     `, [userId]);
     console.log(`✓ Admin role assigned to user id=${userId} via model_has_roles`);
 
+    // ─── 9. COMMITTEE TASKS ─────────────────────────────
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS committee_tasks (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        committee_id BIGINT UNSIGNED NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NULL,
+        status ENUM('pending','in_progress','done') NOT NULL DEFAULT 'pending',
+        due_date DATE NULL,
+        created_at TIMESTAMP NULL DEFAULT NULL,
+        updated_at TIMESTAMP NULL DEFAULT NULL,
+        CONSTRAINT fk_ct_committee
+          FOREIGN KEY (committee_id) REFERENCES committees(id)
+          ON DELETE CASCADE
+      )
+    `);
+    console.log('✓ Committee tasks table ready.');
+
+    // ─── 10. COMMITTEE TASK PROGRESS ────────────────────
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS committee_task_progress (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        committee_task_id BIGINT UNSIGNED NOT NULL,
+        description TEXT NOT NULL,
+        status ENUM('in_progress','done') NOT NULL DEFAULT 'in_progress',
+        progress_date DATE NOT NULL,
+        attachment VARCHAR(500) NULL,
+        created_at TIMESTAMP NULL DEFAULT NULL,
+        updated_at TIMESTAMP NULL DEFAULT NULL,
+        CONSTRAINT fk_ctp_task
+          FOREIGN KEY (committee_task_id) REFERENCES committee_tasks(id)
+          ON DELETE CASCADE
+      )
+    `);
+    console.log('✓ Committee task progress table ready.');
+
+    const [committees] = await db.query(
+      'SELECT id, name FROM committees LIMIT 1'
+    );
+
+    if (committees.length > 0) {
+      const committee = committees[0];
+
+      const [existingTasks] = await db.query(
+        'SELECT id FROM committee_tasks WHERE committee_id = ? LIMIT 1',
+        [committee.id]
+      );
+
+      let taskId;
+
+      if (existingTasks.length > 0) {
+        taskId = existingTasks[0].id;
+      } else {
+        const [taskResult] = await db.query(
+          `INSERT INTO committee_tasks
+          (committee_id, title, description, status, due_date, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+          [
+            committee.id,
+            'Persiapan Acara',
+            'Menyiapkan semua kebutuhan acara utama',
+            'in_progress',
+            '2026-07-01'
+          ]
+        );
+
+        taskId = taskResult.insertId;
+      }
+
+      const [existingProgress] = await db.query(
+        'SELECT id FROM committee_task_progress WHERE committee_task_id = ? LIMIT 1',
+        [taskId]
+      );
+
+      if (existingProgress.length === 0) {
+        await db.query(
+          `INSERT INTO committee_task_progress
+          (committee_task_id, description, status, progress_date, created_at, updated_at)
+          VALUES (?, ?, ?, ?, NOW(), NOW())`,
+          [
+            taskId,
+            'Draft proposal acara telah selesai dibuat.',
+            'in_progress',
+            '2026-06-06'
+          ]
+        );
+      }
+    }
+
     console.log('\n✅ Database initialization complete!');
     console.log('   Login with: admin@example.com / password\n');
 
