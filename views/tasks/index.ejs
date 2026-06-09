@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="id">
+<%- include('../partials/_head', { title }) %>
+<body class="bg-background text-foreground antialiased" hx-boost="true">
+<%- include('../partials/_sidebar', { user }) %>
+<main id="content">
+
+  <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
+    <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" aria-label="Toggle sidebar" class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="flex flex-1 items-center gap-2 text-sm text-muted-foreground">
+      <a href="/committees" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="hover:text-foreground transition-colors">Kepanitiaan</a>
+      <span>/</span>
+      <a href="/committees/<%= committee.id %>" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="hover:text-foreground transition-colors truncate max-w-[150px]"><%= committee.name %></a>
+      <span>/</span>
+      <span class="text-foreground font-medium">Task</span>
+    </div>
+    <div class="ml-auto flex items-center gap-2">
+      <button type="button" aria-label="Toggle dark mode" onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))" class="btn-icon-outline size-8 flex items-center justify-center shrink-0">
+        <span class="hidden dark:block"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
+        <span class="block dark:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span>
+      </button>
+      <a href="/committees/<%= committee.id %>/tasks/create" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="btn btn-sm gap-1.5" id="add-task-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Tambah Task
+      </a>
+    </div>
+  </header>
+
+  <div class="p-4 md:p-6 xl:p-8 bg-muted/20 min-h-[calc(100vh-3.5rem)]">
+    <div class="max-w-screen-xl mx-auto">
+
+      <div class="mb-6">
+        <h2 class="text-xl font-bold tracking-tight">Manajemen Task</h2>
+        <p class="text-sm text-muted-foreground mt-1">Kepanitiaan: <strong><%= committee.name %></strong></p>
+      </div>
+
+      <% if (tasks.length === 0) { %>
+      <div class="card p-12 text-center">
+        <div class="size-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <p class="font-semibold text-base">Belum ada task</p>
+        <p class="text-sm text-muted-foreground mt-1 mb-4">Buat task pertama untuk kepanitiaan ini.</p>
+        <a href="/committees/<%= committee.id %>/tasks/create" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="btn btn-sm">Buat Task Pertama</a>
+      </div>
+      <% } else { %>
+
+      <%
+        const statusGroups = { todo: [], in_progress: [], done: [], blocked: [] };
+        tasks.forEach(t => { if (statusGroups[t.status]) statusGroups[t.status].push(t); else statusGroups.todo.push(t); });
+        const statusMeta = {
+          todo:        { label: 'To Do',        color: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',   dot: 'bg-zinc-400' },
+          in_progress: { label: 'In Progress',  color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', dot: 'bg-blue-500' },
+          done:        { label: 'Done',          color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400', dot: 'bg-green-500' },
+          blocked:     { label: 'Blocked',       color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',   dot: 'bg-red-500' },
+        };
+        const priorityMeta = {
+          low:    { label: 'Rendah', color: 'text-muted-foreground' },
+          medium: { label: 'Sedang', color: 'text-amber-600 dark:text-amber-400' },
+          high:   { label: 'Tinggi', color: 'text-red-600 dark:text-red-400' },
+        };
+      %>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <% Object.entries(statusGroups).forEach(([status, taskList]) => {
+          const meta = statusMeta[status];
+        %>
+        <div class="space-y-3">
+          <div class="flex items-center gap-2 px-1">
+            <span class="size-2 rounded-full <%= meta.dot %>"></span>
+            <h3 class="font-semibold text-sm"><%= meta.label %></h3>
+            <span class="ml-auto text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5"><%= taskList.length %></span>
+          </div>
+          <% taskList.forEach(task => {
+            const p = priorityMeta[task.priority] || priorityMeta.medium;
+          %>
+          <div class="card p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <h4 class="font-medium text-sm leading-snug flex-1"><%= task.title %></h4>
+              <span class="text-xs shrink-0 <%= p.color %> font-medium">● <%= p.label %></span>
+            </div>
+            <% if (task.description) { %>
+              <p class="text-xs text-muted-foreground mb-3 line-clamp-2"><%= task.description %></p>
+            <% } %>
+            <div class="flex items-center justify-between gap-2 mt-3 pt-3 border-t">
+              <div class="text-xs text-muted-foreground">
+                <% if (task.assigned_name) { %>
+                  <span title="<%= task.assigned_role %>">👤 <%= task.assigned_name %></span>
+                <% } %>
+                <% if (task.due_date) { %>
+                  <span class="ml-2">📅 <%= new Date(task.due_date).toLocaleDateString('id-ID', { day:'numeric', month:'short' }) %></span>
+                <% } %>
+                <% if (task.progress_count > 0) { %>
+                  <span class="ml-2">📝 <%= task.progress_count %></span>
+                <% } %>
+              </div>
+              <div class="flex gap-1">
+                <a href="/committees/<%= committee.id %>/tasks/<%= task.id %>/edit" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+                   class="btn-ghost text-muted-foreground hover:text-foreground size-6 flex items-center justify-center p-0 rounded" id="edit-task-<%= task.id %>">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                </a>
+                <form method="POST" action="/committees/<%= committee.id %>/tasks/<%= task.id %>/delete" style="display:inline">
+                  <button type="button" onclick="showDeleteModal(this.closest('form'))"
+                          class="btn-ghost text-destructive hover:bg-destructive/10 size-6 flex items-center justify-center p-0 rounded" id="del-task-<%= task.id %>">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+          <% if (taskList.length === 0) { %>
+          <div class="border border-dashed rounded-lg p-4 text-center text-xs text-muted-foreground">Tidak ada task</div>
+          <% } %>
+        </div>
+        <% }) %>
+      </div>
+
+      <% } %>
+    </div>
+  </div>
+
+</main>
+<%- include('../partials/_scripts') %>
+</body>
+</html>

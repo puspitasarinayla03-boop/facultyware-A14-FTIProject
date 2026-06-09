@@ -3,18 +3,38 @@
   <script>
     (() => {
       try {
+        // Restore dark mode
         const stored = localStorage.getItem("themeMode");
         const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
         if (stored ? stored === "dark" : prefersDark) {
           document.documentElement.classList.add("dark");
         }
+        // Restore theme variant
+        const variant = localStorage.getItem("themeVariant");
+        const THEMES = ["theme-claude", "theme-doom-64", "theme-supabase"];
+        if (variant && THEMES.includes(variant)) {
+          document.documentElement.classList.add(variant);
+        }
       } catch (_) {}
+
+      // Dark mode toggle
       document.addEventListener("basecoat:theme", (e) => {
         const mode = e.detail?.mode;
         const isDark = mode === "dark" ? true : mode === "light" ? false
           : !document.documentElement.classList.contains("dark");
         document.documentElement.classList.toggle("dark", isDark);
         try { localStorage.setItem("themeMode", isDark ? "dark" : "light"); } catch (_) {}
+      });
+
+      // Theme variant switcher
+      document.addEventListener("basecoat:variant", (e) => {
+        const variant = e.detail?.variant || "";
+        const THEMES = ["theme-claude", "theme-doom-64", "theme-supabase"];
+        THEMES.forEach(t => document.documentElement.classList.remove(t));
+        if (variant && THEMES.includes(variant)) {
+          document.documentElement.classList.add(variant);
+        }
+        try { localStorage.setItem("themeVariant", variant); } catch (_) {}
       });
     })();
   </script>

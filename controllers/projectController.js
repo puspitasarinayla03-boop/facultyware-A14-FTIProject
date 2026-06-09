@@ -111,19 +111,20 @@ const store = async (req, res, next) => {
       });
     }
 
-    const { name, description, objective, start_date, end_date, status } = req.body;
+    const { name, description, objective, expected_outcome, start_date, end_date, status } = req.body;
     const createdBy = req.session.employeeId || 1;
 
     await db.query(
       `INSERT INTO committees
-         (name, description, objective,
+         (name, description, objective, expected_outcome,
           start_date, end_date, status,
           created_by, employee_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
         name.trim(),
         description || null,
         objective.trim(),
+        expected_outcome || null,
         start_date,
         end_date || null,
         status,
@@ -132,6 +133,7 @@ const store = async (req, res, next) => {
       ]
     );
 
+    req.session.toast = { message: 'Proyek berhasil dibuat!', type: 'success' };
     res.redirect('/projects');
   } catch (err) {
     next(err);
@@ -218,11 +220,11 @@ const update = async (req, res, next) => {
       });
     }
 
-    const { name, description, objective, start_date, end_date, status } = req.body;
+    const { name, description, objective, expected_outcome, start_date, end_date, status } = req.body;
 
     await db.query(
       `UPDATE committees SET
-         name = ?, description = ?, objective = ?,
+         name = ?, description = ?, objective = ?, expected_outcome = ?,
          start_date = ?, end_date = ?,
          status = ?, updated_at = NOW()
        WHERE id = ?`,
@@ -230,6 +232,7 @@ const update = async (req, res, next) => {
         name.trim(),
         description || null,
         objective.trim(),
+        expected_outcome || null,
         start_date,
         end_date || null,
         status,
@@ -237,6 +240,7 @@ const update = async (req, res, next) => {
       ]
     );
 
+    req.session.toast = { message: 'Proyek berhasil diperbarui!', type: 'success' };
     res.redirect(`/projects/${id}`);
   } catch (err) {
     next(err);
@@ -256,6 +260,7 @@ const destroy = async (req, res, next) => {
       return res.redirect(`/projects?error=has_members`);
     }
     await db.query('DELETE FROM committees WHERE id = ?', [id]);
+    req.session.toast = { message: 'Proyek berhasil dihapus!', type: 'success' };
     res.redirect('/projects');
   } catch (err) {
     next(err);
@@ -339,19 +344,20 @@ const apiStore = async (req, res) => {
       return res.status(422).json({ success: false, message: errors.join('; '), data: null });
     }
 
-    const { name, description, objective, start_date, end_date, status } = req.body;
+    const { name, description, objective, expected_outcome, start_date, end_date, status } = req.body;
     const createdBy = 1;
 
     const [result] = await db.query(
       `INSERT INTO committees
-         (name, description, objective,
+         (name, description, objective, expected_outcome,
           start_date, end_date, status,
           created_by, employee_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
         name.trim(),
         description || null,
         objective.trim(),
+        expected_outcome || null,
         start_date,
         end_date || null,
         status,

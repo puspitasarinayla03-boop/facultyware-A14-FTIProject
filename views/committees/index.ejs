@@ -70,8 +70,9 @@
           <div class="w-40">
             <select name="status" class="select w-full" id="committee-status-filter">
               <option value="">Semua Status</option>
-              <% ['draft','active','completed','cancelled'].forEach(s => { %>
-                <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s.charAt(0).toUpperCase() + s.slice(1) %></option>
+              <% const statusOpts = { draft:'Draft', active:'Aktif', completed:'Selesai', cancelled:'Dibatalkan' }; %>
+              <% Object.entries(statusOpts).forEach(([val, label]) => { %>
+                <option value="<%= val %>" <%= filters.status === val ? 'selected' : '' %>><%= label %></option>
               <% }) %>
             </select>
           </div>
@@ -155,6 +156,12 @@
                           <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
                         </svg>
                       </a>
+                      <a href="/committees/<%= c.id %>/sk" target="_blank"
+                         class="btn-sm-icon-ghost size-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30" title="Download SK">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+                        </svg>
+                      </a>
                       <a href="/committees/<%= c.id %>/edit"
                          hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
                          class="btn-sm-icon-ghost size-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30" title="Edit">
@@ -205,6 +212,32 @@
 
     </div>
   </div>
+
+
+  <%# ── Delete Confirmation Modal (Basecoat dialog) ── %>
+  <dialog id="delete-modal" class="dialog">
+    <div class="dialog-content max-w-sm">
+      <header class="dialog-header">
+        <h2 class="dialog-title">Hapus Kepanitiaan?</h2>
+        <p class="dialog-description">Tindakan ini tidak dapat dibatalkan. Data kepanitiaan akan dihapus permanen.</p>
+      </header>
+      <footer class="dialog-footer">
+        <button type="button" class="btn-outline" onclick="document.getElementById('delete-modal').close()">Batal</button>
+        <button type="button" id="confirm-delete-btn" class="btn bg-destructive text-white hover:bg-destructive/90">Hapus</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <script>
+    let _deleteForm = null;
+    function showDeleteModal(form) {
+      _deleteForm = form;
+      document.getElementById('delete-modal').showModal();
+    }
+    document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+      if (_deleteForm) _deleteForm.submit();
+    });
+  </script>
 
 </main>
 

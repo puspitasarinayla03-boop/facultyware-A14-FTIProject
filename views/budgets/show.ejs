@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="id">
+<%- include('../partials/_head', { title }) %>
+<body class="bg-background text-foreground antialiased" hx-boost="true">
+<%- include('../partials/_sidebar', { user }) %>
+<main id="content">
+
+  <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
+    <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" aria-label="Toggle sidebar" class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="flex flex-1 items-center gap-2 text-sm text-muted-foreground overflow-hidden">
+      <a href="/committees" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="hover:text-foreground transition-colors shrink-0">Kepanitiaan</a>
+      <span class="shrink-0">/</span>
+      <a href="/committees/<%= committee.id %>" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="hover:text-foreground transition-colors truncate max-w-[120px] shrink-0"><%= committee.name %></a>
+      <span class="shrink-0">/</span>
+      <a href="/committees/<%= committee.id %>/budgets" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="hover:text-foreground transition-colors shrink-0">RAB</a>
+      <span class="shrink-0">/</span>
+      <span class="text-foreground font-medium truncate"><%= budget.name %></span>
+    </div>
+    <div class="ml-auto flex items-center gap-2 shrink-0">
+      <button type="button" aria-label="Toggle dark mode" onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))" class="btn-icon-outline size-8 flex items-center justify-center">
+        <span class="hidden dark:block"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
+        <span class="block dark:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span>
+      </button>
+      <a href="/committees/<%= committee.id %>/budgets/<%= budget.id %>/export-excel" hx-boost="false"
+         class="btn-outline btn-sm gap-1.5 text-green-700 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700" id="export-excel-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export Excel
+      </a>
+      <a href="/committees/<%= committee.id %>/budgets/<%= budget.id %>/edit" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="btn btn-sm gap-1.5" id="edit-rab-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+        Edit
+      </a>
+    </div>
+  </header>
+
+  <%
+    const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(parseFloat(n) || 0);
+    const total = parseFloat(budget.total_amount) || 0;
+    const used  = parseFloat(budget.used_amount)  || 0;
+    const pct   = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+    const barColor = pct >= 90 ? 'bg-destructive' : pct >= 70 ? 'bg-amber-500' : 'bg-primary';
+  %>
+
+  <div class="p-4 md:p-6 xl:p-8 bg-muted/20 min-h-[calc(100vh-3.5rem)]">
+    <div class="max-w-screen-xl mx-auto space-y-6">
+
+      <%# ── Hero Summary Card ── %>
+      <div class="card p-6" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1d4ed8 100%); border-radius: var(--radius-lg);">
+        <div style="position:relative; z-index:1;">
+          <p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.55)">RAB · <%= committee.name %></p>
+          <h2 class="text-2xl font-bold text-white mb-1"><%= budget.name %></h2>
+          <% if (budget.description) { %><p class="text-sm mb-4" style="color:rgba(255,255,255,0.7)"><%= budget.description %></p><% } %>
+
+          <div class="grid grid-cols-3 gap-4 mt-4">
+            <div>
+              <p class="text-xs uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.5)">Total Anggaran</p>
+              <p class="text-base font-bold text-white"><%= fmt(total) %></p>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.5)">Realisasi</p>
+              <p class="text-base font-bold" style="color:#fbbf24"><%= fmt(used) %></p>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.5)">Sisa</p>
+              <p class="text-base font-bold" style="color:#34d399"><%= fmt(total - used) %></p>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div class="w-full rounded-full h-2" style="background:rgba(255,255,255,0.15)">
+              <div class="<%= barColor %> h-2 rounded-full" style="width:<%= pct %>%"></div>
+            </div>
+            <p class="text-xs mt-1" style="color:rgba(255,255,255,0.5)"><%= pct %>% anggaran terpakai</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        <%# ── Rincian Items ── %>
+        <div class="xl:col-span-2 space-y-6">
+          <div class="card p-6">
+            <h3 class="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-4">Rincian Item Anggaran</h3>
+            <% if (items.length === 0) { %>
+              <p class="text-sm text-muted-foreground text-center py-6">Belum ada item anggaran.</p>
+            <% } else { %>
+            <div class="overflow-x-auto">
+              <table class="table w-full text-sm">
+                <thead>
+                  <tr>
+                    <th class="text-left">Nama Item</th>
+                    <th class="text-center" style="width:60px">Qty</th>
+                    <th class="text-right">Harga Satuan</th>
+                    <th class="text-right">Anggaran</th>
+                    <th class="text-right">Realisasi</th>
+                    <th class="text-right">Sisa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% items.forEach(item => {
+                    const iTotal = parseFloat(item.total_price) || 0;
+                    const iUsed  = parseFloat(item.used_amount) || 0;
+                    const iSisa  = iTotal - iUsed;
+                    const iPct   = iTotal > 0 ? Math.min(100, Math.round((iUsed/iTotal)*100)) : 0;
+                  %>
+                  <tr>
+                    <td class="font-medium">
+                      <%= item.name %>
+                      <% if (item.expense_count > 0) { %>
+                        <span class="ml-1 text-xs text-muted-foreground">(<%= item.expense_count %> realisasi)</span>
+                      <% } %>
+                    </td>
+                    <td class="text-center text-muted-foreground"><%= item.quantity %></td>
+                    <td class="text-right text-muted-foreground"><%= fmt(item.unit_price) %></td>
+                    <td class="text-right font-medium"><%= fmt(iTotal) %></td>
+                    <td class="text-right text-amber-600 dark:text-amber-400 font-medium"><%= fmt(iUsed) %></td>
+                    <td class="text-right font-medium <%= iSisa < 0 ? 'text-destructive' : 'text-green-600 dark:text-green-400' %>"><%= fmt(iSisa) %></td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+                <tfoot>
+                  <tr class="border-t-2">
+                    <td colspan="3" class="font-bold text-right text-sm">TOTAL</td>
+                    <td class="text-right font-bold"><%= fmt(total) %></td>
+                    <td class="text-right font-bold text-amber-600 dark:text-amber-400"><%= fmt(used) %></td>
+                    <td class="text-right font-bold <%= (total-used) < 0 ? 'text-destructive' : 'text-green-600 dark:text-green-400' %>"><%= fmt(total-used) %></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <% } %>
+          </div>
+
+          <%# ── Riwayat Pengeluaran ── %>
+          <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Riwayat Pengeluaran</h3>
+              <button type="button" onclick="document.getElementById('expense-form-panel').classList.toggle('hidden')" class="btn btn-sm gap-1.5" id="toggle-expense-form-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Ajukan Pengeluaran
+              </button>
+            </div>
+
+            <%# ── Form Ajukan Pengeluaran ── %>
+            <div id="expense-form-panel" class="hidden mb-6 p-4 rounded-lg border bg-muted/20">
+              <h4 class="font-semibold text-sm mb-3">Form Pengajuan Pengeluaran</h4>
+              <form method="POST" action="/committees/<%= committee.id %>/budgets/<%= budget.id %>/expenses" enctype="multipart/form-data" class="grid gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div class="grid gap-1.5">
+                    <label class="label text-xs">Item Anggaran <span class="text-destructive">*</span></label>
+                    <select name="committee_budget_item_id" class="select w-full text-sm" required id="expense-item-select">
+                      <option value="">-- Pilih Item --</option>
+                      <% items.forEach(item => { %>
+                        <option value="<%= item.id %>"><%= item.name %> (sisa <%= fmt(parseFloat(item.total_price) - parseFloat(item.used_amount)) %>)</option>
+                      <% }) %>
+                    </select>
+                  </div>
+                  <div class="grid gap-1.5">
+                    <label class="label text-xs">Jumlah (Rp) <span class="text-destructive">*</span></label>
+                    <input type="number" name="amount" class="input w-full text-sm" min="1" step="1" placeholder="0" required id="expense-amount" />
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div class="grid gap-1.5">
+                    <label class="label text-xs">Tanggal <span class="text-destructive">*</span></label>
+                    <input type="date" name="expense_date" class="input w-full text-sm" value="<%= new Date().toISOString().split('T')[0] %>" required id="expense-date" />
+                  </div>
+                  <div class="grid gap-1.5">
+                    <label class="label text-xs">Bukti Pengeluaran (opsional)</label>
+                    <input type="file" name="receipt_file" accept=".jpg,.jpeg,.png,.pdf"
+                           class="input w-full text-sm file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-muted cursor-pointer" id="expense-receipt" />
+                  </div>
+                </div>
+                <div class="grid gap-1.5">
+                  <label class="label text-xs">Keterangan</label>
+                  <textarea name="description" class="input w-full text-sm min-h-[60px] py-1.5" placeholder="Keterangan pengeluaran..."></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-1">
+                  <button type="button" onclick="document.getElementById('expense-form-panel').classList.add('hidden')" class="btn-outline btn-sm">Batal</button>
+                  <button type="submit" class="btn btn-sm" id="submit-expense-btn">Ajukan Pengeluaran</button>
+                </div>
+              </form>
+            </div>
+
+            <% if (expenses.length === 0) { %>
+              <p class="text-sm text-muted-foreground text-center py-6">Belum ada pengeluaran yang diajukan.</p>
+            <% } else { %>
+            <div class="overflow-x-auto">
+              <table class="table w-full text-sm">
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th>Item</th>
+                    <th class="text-right">Jumlah</th>
+                    <th class="text-center">Status</th>
+                    <th>Diajukan oleh</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% expenses.forEach(exp => {
+                    const statusColor = {
+                      submitted: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400',
+                      approved:  'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400',
+                      rejected:  'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400',
+                    }[exp.status] || '';
+                    const statusLabel = { submitted: 'Diajukan', approved: 'Disetujui', rejected: 'Ditolak' }[exp.status] || exp.status;
+                  %>
+                  <tr>
+                    <td class="whitespace-nowrap text-muted-foreground"><%= new Date(exp.expense_date).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) %></td>
+                    <td class="font-medium"><%= exp.item_name %></td>
+                    <td class="text-right font-medium"><%= fmt(exp.amount) %></td>
+                    <td class="text-center">
+                      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium <%= statusColor %>"><%= statusLabel %></span>
+                    </td>
+                    <td class="text-muted-foreground"><%= exp.submitted_by_name || '-' %></td>
+                    <td class="text-right">
+                      <div class="flex items-center justify-end gap-1">
+                        <% if (exp.receipt_file) { %>
+                          <a href="<%= exp.receipt_file %>" target="_blank" class="btn-outline btn-sm text-xs px-2 py-0.5">Bukti</a>
+                        <% } %>
+                        <% if (exp.status === 'submitted') { %>
+                          <form method="POST" action="/committees/<%= committee.id %>/budgets/<%= budget.id %>/expenses/<%= exp.id %>/approve" style="display:inline">
+                            <button type="submit" class="btn btn-sm text-xs px-2 py-0.5 bg-green-600 hover:bg-green-700" id="approve-expense-<%= exp.id %>">Setujui</button>
+                          </form>
+                          <form method="POST" action="/committees/<%= committee.id %>/budgets/<%= budget.id %>/expenses/<%= exp.id %>/reject" style="display:inline">
+                            <button type="submit" class="btn-outline btn-sm text-xs px-2 py-0.5 text-destructive hover:bg-destructive/10" id="reject-expense-<%= exp.id %>">Tolak</button>
+                          </form>
+                        <% } %>
+                        <form method="POST" action="/committees/<%= committee.id %>/budgets/<%= budget.id %>/expenses/<%= exp.id %>/delete" style="display:inline">
+                          <button type="button" onclick="showDeleteModal(this.closest('form'))" class="btn-ghost text-destructive hover:bg-destructive/10 size-6 flex items-center justify-center p-0 rounded" id="del-expense-<%= exp.id %>">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <% } %>
+          </div>
+        </div>
+
+        <%# ── Right Panel: Quick Actions ── %>
+        <div class="space-y-4">
+          <div class="card p-5 space-y-3">
+            <h3 class="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Aksi</h3>
+            <a href="/committees/<%= committee.id %>/budgets/<%= budget.id %>/export-excel" hx-boost="false"
+               class="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md border hover:bg-accent transition-colors text-sm font-medium text-green-700 dark:text-green-400 border-green-200 dark:border-green-800" id="quick-export-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Excel RAB
+            </a>
+            <a href="/committees/<%= committee.id %>/budgets/<%= budget.id %>/edit" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+               class="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md border hover:bg-accent transition-colors text-sm font-medium" id="quick-edit-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+              Edit RAB
+            </a>
+            <a href="/committees/<%= committee.id %>/budgets" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+               class="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md border hover:bg-accent transition-colors text-sm font-medium text-muted-foreground" id="quick-back-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              Semua RAB
+            </a>
+            <form method="POST" action="/committees/<%= committee.id %>/budgets/<%= budget.id %>/delete">
+              <button type="button" onclick="showDeleteModal(this.closest('form'))"
+                      class="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors text-sm font-medium" id="quick-delete-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Hapus RAB
+              </button>
+            </form>
+          </div>
+
+          <div class="card p-5">
+            <h3 class="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">Info</h3>
+            <dl class="space-y-2 text-sm">
+              <div class="flex justify-between"><dt class="text-muted-foreground">ID RAB</dt><dd class="font-mono font-medium">#<%= budget.id %></dd></div>
+              <div class="flex justify-between"><dt class="text-muted-foreground">Dibuat</dt><dd><%= budget.created_at ? new Date(budget.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) : '-' %></dd></div>
+              <div class="flex justify-between"><dt class="text-muted-foreground">Diperbarui</dt><dd><%= budget.updated_at ? new Date(budget.updated_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) : '-' %></dd></div>
+              <div class="flex justify-between"><dt class="text-muted-foreground">Jumlah Item</dt><dd class="font-medium"><%= items.length %> item</dd></div>
+              <div class="flex justify-between"><dt class="text-muted-foreground">Pengajuan</dt><dd class="font-medium"><%= expenses.length %> pengeluaran</dd></div>
+            </dl>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+<%- include('../partials/_scripts') %>
+</body>
+</html>

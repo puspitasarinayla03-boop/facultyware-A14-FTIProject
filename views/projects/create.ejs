@@ -94,6 +94,12 @@
               <textarea id="objective" name="objective" class="input w-full min-h-[80px] py-2"
                         placeholder="Apa yang ingin dicapai dari kegiatan ini?" required><%= old.objective || '' %></textarea>
             </div>
+
+            <div class="grid gap-2">
+              <label for="expected_outcome">Hasil yang Diharapkan (Expected Outcome)</label>
+              <textarea id="expected_outcome" name="expected_outcome" class="input w-full min-h-[80px] py-2"
+                        placeholder="Apa hasil atau output yang diharapkan dari kegiatan ini?"><%= old.expected_outcome || '' %></textarea>
+            </div>
           </section>
         </div>
 

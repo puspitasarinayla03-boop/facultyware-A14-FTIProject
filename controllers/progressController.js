@@ -184,6 +184,7 @@ const store = (req, res, next) => {
         [committee_task_id, description.trim(), status, progress_date, attachment]
       );
 
+      req.session.toast = { message: 'Progress berhasil disimpan!', type: 'success' };
       res.redirect('/progresses');
 
     } catch (err) {
@@ -352,6 +353,7 @@ const update = (req, res, next) => {
         return ErrorHandler.renderError(res, 'E5', 'Terjadi kesalahan saat memperbarui data.', 500);
       }
 
+      req.session.toast = { message: 'Progress berhasil diperbarui!', type: 'success' };
       res.redirect('/progresses');
 
     } catch (err) {
@@ -401,6 +403,7 @@ const destroy = async (req, res, next) => {
       return ErrorHandler.renderError(res, 'E3', 'Terjadi kesalahan saat menghapus data.', 500);
     }
 
+    req.session.toast = { message: 'Progress berhasil dihapus!', type: 'success' };
     res.redirect('/progresses');
 
   } catch (err) {

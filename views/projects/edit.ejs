@@ -89,6 +89,12 @@
               <textarea id="objective" name="objective" class="input w-full min-h-[80px] py-2"
                         placeholder="Apa yang ingin dicapai dari kegiatan ini?" required><%= project.objective || '' %></textarea>
             </div>
+
+            <div class="grid gap-2">
+              <label for="expected_outcome">Hasil yang Diharapkan (Expected Outcome)</label>
+              <textarea id="expected_outcome" name="expected_outcome" class="input w-full min-h-[80px] py-2"
+                        placeholder="Apa hasil atau output yang diharapkan dari kegiatan ini?"><%= project.expected_outcome || '' %></textarea>
+            </div>
           </section>
         </div>
 
@@ -101,12 +107,12 @@
               <div class="grid gap-2">
                 <label for="start_date">Tanggal Mulai <span class="text-destructive">*</span></label>
                 <input type="date" id="start_date" name="start_date" class="input w-full"
-                       value="<%= project.start_date ? new Date(project.start_date).toISOString().split('T')[0] : '' %>" required />
+                       value="<%= (project.start_date && project.start_date !== '') ? (typeof project.start_date === 'string' ? project.start_date.split('T')[0] : new Date(project.start_date.getTime() - (project.start_date.getTimezoneOffset() * 60000)).toISOString().split('T')[0]) : '' %>" required />
               </div>
               <div class="grid gap-2">
                 <label for="end_date">Tanggal Selesai</label>
                 <input type="date" id="end_date" name="end_date" class="input w-full"
-                       value="<%= project.end_date ? new Date(project.end_date).toISOString().split('T')[0] : '' %>" />
+                       value="<%= (project.end_date && project.end_date !== '') ? (typeof project.end_date === 'string' ? project.end_date.split('T')[0] : new Date(project.end_date.getTime() - (project.end_date.getTimezoneOffset() * 60000)).toISOString().split('T')[0]) : '' %>" />
               </div>
             </div>
           </section>

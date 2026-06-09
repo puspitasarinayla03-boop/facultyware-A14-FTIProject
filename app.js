@@ -10,13 +10,15 @@ var logger = require('morgan');
 var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session);
 
-var indexRouter    = require('./routes/index');
-var usersRouter    = require('./routes/users');
-var projectsRouter    = require('./routes/projects');
-var committeesRouter  = require('./routes/committees');
+var indexRouter      = require('./routes/index');
+var usersRouter      = require('./routes/users');
+var projectsRouter   = require('./routes/projects');
+var committeesRouter = require('./routes/committees');
 var progressesRouter = require('./routes/progresses');
-var reportsRouter = require('./routes/reports');
-var dashboardRouter = require('./routes/dashboard');
+var reportsRouter    = require('./routes/reports');
+var dashboardRouter  = require('./routes/dashboard');
+var budgetsRouter    = require('./routes/budgets');
+var tasksRouter      = require('./routes/tasks');
 const { notFoundHandler, errorHandler } = require('./middlewares/error');
 
 var app = express();
@@ -58,10 +60,20 @@ app.use(session({
   }
 }));
 
+app.use((req, res, next) => {
+  if (req.session.toast) {
+    res.locals.toast = req.session.toast;
+    delete req.session.toast;
+  }
+  next();
+});
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/projects',    projectsRouter);
 app.use('/committees',  committeesRouter);
+app.use('/committees/:id/budgets', budgetsRouter);
+app.use('/committees/:id/tasks',   tasksRouter);
 app.use('/progresses', progressesRouter);
 app.use('/reports', reportsRouter);
 app.use('/dashboard', dashboardRouter);

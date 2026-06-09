@@ -1,0 +1,138 @@
+<%#
+  _header_controls.ejs
+  Reusable dropdown theme-switcher + dark mode toggle.
+  Include this partial in every page header's ml-auto section.
+%>
+
+<%# ── Theme Variant Dropdown (Basecoat dropdown-menu) ── %>
+<div class="dropdown-menu relative">
+  <button type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          id="theme-variant-trigger"
+          class="btn-outline h-8 px-3 text-sm gap-1.5 flex items-center min-w-[5.5rem] justify-between">
+    <span id="theme-variant-label">Default</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round" class="opacity-60 shrink-0">
+      <path d="m6 9 6 6 6-6"/>
+    </svg>
+  </button>
+
+  <div data-popover aria-hidden="true"
+       class="absolute right-0 top-full mt-1 z-50 min-w-[8rem]"
+       style="--popover-offset: 4px;">
+    <ul role="menu"
+        class="bg-popover text-popover-foreground rounded-lg border shadow-md p-1 text-sm">
+      <li role="menuitem"
+          id="variant-default"
+          onclick="setThemeVariant('')"
+          class="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors select-none">
+        <span class="size-3 rounded-full bg-blue-600 shrink-0"></span>
+        Default
+        <svg id="check-default" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="3"
+             stroke-linecap="round" stroke-linejoin="round" class="ml-auto">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </li>
+      <li role="menuitem"
+          id="variant-claude"
+          onclick="setThemeVariant('theme-claude')"
+          class="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors select-none">
+        <span class="size-3 rounded-full shrink-0" style="background:oklch(0.62 0.14 39.04)"></span>
+        Claude
+        <svg id="check-claude" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="3"
+             stroke-linecap="round" stroke-linejoin="round" class="ml-auto hidden">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </li>
+      <li role="menuitem"
+          id="variant-doom64"
+          onclick="setThemeVariant('theme-doom-64')"
+          class="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors select-none">
+        <span class="size-3 rounded-full shrink-0" style="background:oklch(0.50 0.19 27.48)"></span>
+        Doom 64
+        <svg id="check-doom64" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="3"
+             stroke-linecap="round" stroke-linejoin="round" class="ml-auto hidden">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </li>
+      <li role="menuitem"
+          id="variant-supabase"
+          onclick="setThemeVariant('theme-supabase')"
+          class="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors select-none">
+        <span class="size-3 rounded-full shrink-0" style="background:oklch(0.83 0.13 160.91)"></span>
+        Supabase
+        <svg id="check-supabase" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="3"
+             stroke-linecap="round" stroke-linejoin="round" class="ml-auto hidden">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<%# ── Dark Mode Toggle ── %>
+<button type="button" aria-label="Toggle dark mode"
+        onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))"
+        class="btn-icon-outline size-8 flex items-center justify-center shrink-0">
+  <span class="hidden dark:block">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+  </span>
+  <span class="block dark:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+    </svg>
+  </span>
+</button>
+
+<%# ── Theme Variant Script (runs once per page) ── %>
+<script>
+  (function () {
+    var VARIANT_MAP = {
+      'theme-claude':   { id: 'claude',   label: 'Claude'   },
+      'theme-doom-64':  { id: 'doom64',   label: 'Doom 64'  },
+      'theme-supabase': { id: 'supabase', label: 'Supabase' },
+    };
+
+    function syncVariantUI(variant) {
+      // Reset all check marks
+      ['default','claude','doom64','supabase'].forEach(function(id) {
+        var el = document.getElementById('check-' + id);
+        if (el) el.classList.add('hidden');
+      });
+      var labelEl = document.getElementById('theme-variant-label');
+
+      if (!variant || !VARIANT_MAP[variant]) {
+        // Default selected
+        var defCheck = document.getElementById('check-default');
+        if (defCheck) defCheck.classList.remove('hidden');
+        if (labelEl) labelEl.textContent = 'Default';
+      } else {
+        var info = VARIANT_MAP[variant];
+        var chk = document.getElementById('check-' + info.id);
+        if (chk) chk.classList.remove('hidden');
+        if (labelEl) labelEl.textContent = info.label;
+      }
+    }
+
+    window.setThemeVariant = function(variant) {
+      document.dispatchEvent(new CustomEvent('basecoat:variant', { detail: { variant: variant } }));
+      syncVariantUI(variant);
+    };
+
+    // Sync UI on load from localStorage
+    try {
+      var stored = localStorage.getItem('themeVariant') || '';
+      syncVariantUI(stored);
+    } catch(e) {}
+  })();
+</script>

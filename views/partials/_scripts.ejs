@@ -122,6 +122,9 @@
   <%# Sesuai Flow 2 E4: server ExpressJS berhenti/crash, frontend tampilkan notifikasi %>
   <script>
     (function () {
+      if (window.__htmxErrorHandlersAdded) return;
+      window.__htmxErrorHandlersAdded = true;
+
       // [E4] HTMX send error — server tidak dapat dijangkau (crash / network down)
       document.addEventListener('htmx:sendError', function (evt) {
         console.error('[E4] HTMX send error — server tidak aktif:', evt.detail);
@@ -149,6 +152,13 @@
         showServerToast('Permintaan melebihi batas waktu. Coba lagi.', 'error');
       });
 
+      // Custom server toast trigger via HX-Trigger header
+      document.body.addEventListener('showToast', function(evt) {
+        if (evt.detail) {
+          showServerToast(evt.detail.message || 'Aksi berhasil', evt.detail.type || 'success');
+        }
+      });
+
       function showServerToast(message, type) {
         var toaster = document.getElementById('toaster');
         if (!toaster) { alert(message); return; }
@@ -169,9 +179,15 @@
           'max-width:380px',
         ].join(';');
 
-        var iconSvg = type === 'error'
-          ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-          : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        var iconSvg = '';
+        if (type === 'error') {
+          iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+        } else if (type === 'success') {
+          bgColor = '#10b981'; // emerald-500
+          iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        } else {
+          iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        }
 
         toast.innerHTML = iconSvg + '<span>' + message + '</span>';
         toaster.appendChild(toast);
@@ -186,3 +202,13 @@
       }
     })();
   </script>
+
+  <% if (typeof toast !== 'undefined' && toast) { %>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        document.body.dispatchEvent(new CustomEvent('showToast', { detail: <%- JSON.stringify(toast) %> }));
+      }, 100);
+    });
+  </script>
+  <% } %>

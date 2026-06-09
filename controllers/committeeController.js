@@ -1,6 +1,8 @@
-const db = require('../lib/db');
+const db   = require('../lib/db');
+const fs   = require('fs');
+const path = require('path');
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-  WidthType, AlignmentType, BorderStyle } = require('docx');
+  WidthType, AlignmentType, BorderStyle, ImageRun } = require('docx');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUSES = ['draft', 'active', 'completed', 'cancelled'];
@@ -125,6 +127,8 @@ const store = async (req, res, next) => {
         employees,
         errors,
         old: req.body,
+        internalMembers: internalMembers,
+        externalMembers: externalMembers,
       });
     }
 
@@ -145,6 +149,7 @@ const store = async (req, res, next) => {
       );
     }
 
+    req.session.toast = { message: 'Kepanitiaan berhasil disimpan!', type: 'success' };
     res.redirect(`/committees/${committee_id}`);
   } catch (err) {
     next(err);
@@ -261,22 +266,13 @@ const update = async (req, res, next) => {
         'SELECT id, name, employee_number FROM employees WHERE status = ? ORDER BY name ASC',
         ['active']
       );
-      const [currentInternal] = await db.query(
-        `SELECT cm.id, cm.employee_id, cm.role, cm.is_leader, emp.name
-         FROM committee_members cm JOIN employees emp ON cm.employee_id = emp.id
-         WHERE cm.committee_id = ? ORDER BY cm.is_leader DESC, emp.name ASC`,
-        [id]
-      );
-      const [currentExternal] = await db.query(
-        'SELECT * FROM committee_external_members WHERE committee_id = ? ORDER BY name ASC', [id]
-      );
       return res.render('committees/edit', {
         title: 'Edit Kepanitiaan',
         user: req.session.userName,
         committee: existing[0],
         employees,
-        internalMembers: currentInternal,
-        externalMembers: currentExternal,
+        internalMembers: internalMembers,
+        externalMembers: externalMembers,
         errors,
       });
     }
@@ -300,6 +296,7 @@ const update = async (req, res, next) => {
       );
     }
 
+    req.session.toast = { message: 'Kepanitiaan berhasil diperbarui!', type: 'success' };
     res.redirect(`/committees/${id}`);
   } catch (err) {
     next(err);
@@ -312,6 +309,7 @@ const destroy = async (req, res, next) => {
     const { id } = req.params;
     await db.query('DELETE FROM committee_members WHERE committee_id = ?', [id]);
     await db.query('DELETE FROM committee_external_members WHERE committee_id = ?', [id]);
+    req.session.toast = { message: 'Kepanitiaan berhasil dihapus!', type: 'success' };
     res.redirect('/committees');
   } catch (err) {
     next(err);
@@ -387,20 +385,59 @@ const exportSK = async (req, res, next) => {
       })),
     ];
 
+    // ── Load logo ──────────────────────────────────────────────────────────
+    const logoPath = path.join(__dirname, '../public/assets/images/logo-unand.png');
+    const logoBuffer = fs.existsSync(logoPath) ? fs.readFileSync(logoPath) : null;
+
+    const kopNoBorder = {
+      top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE },
+      left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE },
+    };
+
+    // ── Kop Surat: logo kiri + teks kanan ─────────────────────────────────
+    const headerLogoCell = new TableCell({
+      width: { size: 15, type: WidthType.PERCENTAGE },
+      borders: kopNoBorder,
+      children: logoBuffer ? [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new ImageRun({ data: logoBuffer, transformation: { width: 80, height: 80 }, type: 'png' })],
+        }),
+      ] : [new Paragraph({ children: [] })],
+    });
+
+    const headerTextCell = new TableCell({
+      width: { size: 85, type: WidthType.PERCENTAGE },
+      borders: kopNoBorder,
+      children: [
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'KEMENTERIAN PENDIDIKAN TINGGI, SAINS DAN TEKNOLOGI', size: 24, font: 'Times New Roman' })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'UNIVERSITAS ANDALAS', size: 28, bold: true, font: 'Times New Roman' })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'FAKULTAS TEKNOLOGI INFORMASI', bold: true, size: 24, font: 'Times New Roman' })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Kampus Universitas Andalas, Limau Manis, Padang - 25163', size: 20, font: 'Times New Roman' })] }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: 'Telp: 0751-9824667  website: http://fti.unand.ac.id  email: sekretariat@it.unand.ac.id', size: 20, font: 'Times New Roman', italics: true })],
+          border: { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 12 } },
+          spacing: { after: 400 },
+        }),
+      ],
+    });
+
+    const kopTable = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: {
+        top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE },
+        left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE },
+        insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE },
+      },
+      rows: [new TableRow({ children: [headerLogoCell, headerTextCell] })],
+    });
+
     const doc = new Document({
       sections: [{
         properties: { page: { margin: { top: 1440, right: 1440, bottom: 1440, left: 1800 } } },
         children: [
-          new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'KEMENTERIAN PENDIDIKAN TINGGI, SAINS DAN TEKNOLOGI', size: 24, font: 'Times New Roman' })] }),
-          new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'UNIVERSITAS ANDALAS', size: 24, font: 'Times New Roman' })] }),
-          new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'FAKULTAS TEKNOLOGI INFORMASI', bold: true, size: 24, font: 'Times New Roman' })] }),
-          new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Kampus Universitas Andalas, Limau Manis, Padang - 25163', size: 20, font: 'Times New Roman' })] }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: 'Telp: 0751-9824667 website: http://fti.unand.ac.id email: sekretariat@it.unand.ac.id', size: 20, font: 'Times New Roman', italics: true })],
-            border: { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 12 } },
-            spacing: { after: 400 },
-          }),
+          kopTable,
 
           new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'KEPUTUSAN DEKAN', size: 24, font: 'Times New Roman' })] }),
           new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'FAKULTAS TEKNOLOGI INFORMASI UNIVERSITAS ANDALAS', size: 24, font: 'Times New Roman' })] }),

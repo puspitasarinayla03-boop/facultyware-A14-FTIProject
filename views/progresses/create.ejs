@@ -19,7 +19,8 @@
         <line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
     </button>
-    <a href="/progresses" class="btn-sm-ghost h-7 text-muted-foreground gap-1.5 hidden sm:inline-flex">
+    <a href="/progresses"
+       class="btn-sm-ghost h-7 text-muted-foreground gap-1.5 hidden sm:inline-flex">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="m15 18-6-6 6-6"/>
@@ -49,111 +50,116 @@
     </div>
   </header>
 
-  <div class="p-4 md:p-6 lg:p-8">
-    <div class="max-w-2xl mx-auto space-y-6">
+  <div class="p-4 md:p-6 xl:p-12">
+    <div class="max-w-screen-md mx-auto">
 
-      <!-- Error messages -->
+      <%# Error Alert %>
       <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
-        <div class="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive space-y-1">
+      <div class="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <p class="font-medium mb-1">Terdapat kesalahan pada input:</p>
+        <ul class="list-disc list-inside space-y-0.5">
           <% errors.forEach(function(err) { %>
-            <p>• <%= err %></p>
+            <li><%= err %></li>
           <% }) %>
-        </div>
+        </ul>
+      </div>
       <% } %>
 
-      <!-- Form -->
-      <div class="card p-6 space-y-5">
-        <form method="POST" action="/progresses" enctype="multipart/form-data" class="space-y-5">
+      <form method="POST" action="/progresses" enctype="multipart/form-data" class="grid gap-6">
 
-          <!-- Task -->
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium" for="committee_task_id">
-              Task Project <span class="text-destructive">*</span>
-            </label>
-            <select id="committee_task_id" name="committee_task_id" required class="input w-full">
-              <option value="">-- Pilih Task --</option>
-              <% if (typeof tasks !== 'undefined') { %>
-                <% tasks.forEach(function(task) { %>
-                  <option value="<%= task.id %>"
-                    <%= (typeof old !== 'undefined' && old.committee_task_id == task.id) ? 'selected' : '' %>>
-                    <%= task.committee_name %> — <%= task.title %>
-                  </option>
-                <% }) %>
+        <%# ── Informasi Task ── %>
+        <div class="card">
+          <header>
+            <h2>Informasi Progress</h2>
+            <p>Pilih task dan isi detail perkembangan yang sudah dilakukan.</p>
+          </header>
+
+          <section class="grid gap-5">
+            <div class="grid gap-2">
+              <label for="committee_task_id">Task Project <span class="text-destructive">*</span></label>
+              <select id="committee_task_id" name="committee_task_id" required class="select w-full">
+                <option value="">-- Pilih Task --</option>
+                <% if (typeof tasks !== 'undefined') { %>
+                  <% tasks.forEach(function(task) { %>
+                    <option value="<%= task.id %>"
+                      <%= (typeof old !== 'undefined' && old.committee_task_id == task.id) ? 'selected' : '' %>>
+                      <%= task.committee_name %> — <%= task.title %>
+                    </option>
+                  <% }) %>
+                <% } %>
+              </select>
+              <% if (typeof tasks !== 'undefined' && tasks.length === 0) { %>
+                <p class="text-xs text-muted-foreground">
+                  Belum ada task. Silakan buat committee dan task terlebih dahulu.
+                </p>
               <% } %>
-            </select>
-            <% if (typeof tasks !== 'undefined' && tasks.length === 0) { %>
-              <p class="text-xs text-muted-foreground">
-                Belum ada task. Silakan buat committee dan task terlebih dahulu.
-              </p>
-            <% } %>
-          </div>
+            </div>
 
-          <!-- Deskripsi -->
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium" for="description">
-              Deskripsi Progress <span class="text-destructive">*</span>
-            </label>
-            <textarea id="description" name="description" rows="4" required
-                      placeholder="Jelaskan perkembangan yang sudah dilakukan..."
-                      class="input w-full resize-y"><%= (typeof old !== 'undefined' && old.description) ? old.description : '' %></textarea>
-          </div>
+            <div class="grid gap-2">
+              <label for="description">Deskripsi Progress <span class="text-destructive">*</span></label>
+              <textarea id="description" name="description" rows="4" required
+                        placeholder="Jelaskan perkembangan yang sudah dilakukan..."
+                        class="input w-full min-h-[100px] py-2 resize-y"><%= (typeof old !== 'undefined' && old.description) ? old.description : '' %></textarea>
+            </div>
+          </section>
+        </div>
 
-          <!-- Status -->
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium" for="status">
-              Status <span class="text-destructive">*</span>
-            </label>
-            <select id="status" name="status" required class="input w-full">
-              <option value="">-- Pilih Status --</option>
-              <option value="in_progress"
-                <%= (typeof old !== 'undefined' && old.status === 'in_progress') ? 'selected' : '' %>>
-                Sedang Berlangsung
-              </option>
-              <option value="done"
-                <%= (typeof old !== 'undefined' && old.status === 'done') ? 'selected' : '' %>>
-                Selesai
-              </option>
-            </select>
-          </div>
+        <%# ── Status & Tanggal ── %>
+        <div class="card">
+          <header>
+            <h2>Status & Jadwal</h2>
+          </header>
 
-          <!-- Tanggal Progress -->
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium" for="progress_date">
-              Tanggal Progress <span class="text-destructive">*</span>
-            </label>
-            <input type="date" id="progress_date" name="progress_date" required
-                   value="<%= (typeof old !== 'undefined' && old.progress_date) ? old.progress_date : new Date().toISOString().split('T')[0] %>"
-                   class="input w-full"/>
-          </div>
+          <section class="grid gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid gap-2">
+                <label for="status">Status <span class="text-destructive">*</span></label>
+                <select id="status" name="status" required class="select w-full">
+                  <option value="">-- Pilih Status --</option>
+                  <option value="in_progress"
+                    <%= (typeof old !== 'undefined' && old.status === 'in_progress') ? 'selected' : '' %>>
+                    Sedang Berlangsung
+                  </option>
+                  <option value="done"
+                    <%= (typeof old !== 'undefined' && old.status === 'done') ? 'selected' : '' %>>
+                    Selesai
+                  </option>
+                </select>
+              </div>
 
-          <!-- Attachment -->
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium" for="attachment">
-              Attachment
-              <span class="text-muted-foreground text-xs font-normal">(opsional, maks 5MB — JPG/PNG/PDF)</span>
-            </label>
-            <input type="file" id="attachment" name="attachment"
-                   accept=".jpg,.jpeg,.png,.pdf"
-                   class="input w-full file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-muted/80 cursor-pointer"/>
-          </div>
+              <div class="grid gap-2">
+                <label for="progress_date">Tanggal Progress <span class="text-destructive">*</span></label>
+                <input type="date" id="progress_date" name="progress_date" required
+                       value="<%= (typeof old !== 'undefined' && old.progress_date) ? old.progress_date : new Date().toISOString().split('T')[0] %>"
+                       class="input w-full"/>
+              </div>
+            </div>
+          </section>
+        </div>
 
-          <!-- Actions -->
-          <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="btn btn-sm gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-              Simpan Progress
-            </button>
-            <a href="/progresses" class="btn-outline btn-sm">Batal</a>
-          </div>
+        <%# ── Attachment ── %>
+        <div class="card">
+          <header>
+            <h2>File Attachment</h2>
+            <p>Opsional. Maks 5MB — JPG, PNG, atau PDF.</p>
+          </header>
+          <section>
+            <div class="grid gap-2">
+              <label for="attachment">Upload File</label>
+              <input type="file" id="attachment" name="attachment"
+                     accept=".jpg,.jpeg,.png,.pdf"
+                     class="input w-full file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-muted/80 cursor-pointer"/>
+            </div>
+          </section>
+        </div>
 
-        </form>
-      </div>
+        <%# ── Actions ── %>
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <a href="/progresses" class="btn-outline">Batal</a>
+          <button type="submit" class="btn">Simpan Progress</button>
+        </div>
 
+      </form>
     </div>
   </div>
 

@@ -152,6 +152,17 @@
         </div>
         <% } %>
 
+        <% if (project.expected_outcome) { %>
+        <div class="card">
+          <header>
+            <h3 class="font-semibold">Hasil yang Diharapkan (Outcome)</h3>
+          </header>
+          <section>
+            <p class="text-sm text-muted-foreground leading-relaxed"><%= project.expected_outcome %></p>
+          </section>
+        </div>
+        <% } %>
+
         <div class="card">
           <header>
             <h3 class="font-semibold">Informasi Teknis</h3>
