@@ -2,7 +2,10 @@ const bcrypt = require("bcryptjs");
 const db = require("../lib/db");
 
 const index = (req, res) => {
-  res.render("index", { title: "Express" });
+  if (req.session.userId) {
+    return res.redirect("/projects");
+  }
+  res.redirect("/login");
 };
 
 // Redirect /home → /projects (projects list is the main dashboard)

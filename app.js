@@ -79,10 +79,13 @@ app.use('/reports', reportsRouter);
 app.use('/dashboard', dashboardRouter);
 
 // REST API routes
-const projectController = require('./controllers/projectController');
-app.get('/api/projects',     projectController.apiIndex);
-app.get('/api/projects/:id', projectController.apiShow);
-app.post('/api/projects',    projectController.apiStore);
+const projectController  = require('./controllers/projectController');
+const { isAuthenticated } = require('./middlewares/auth');
+const { checkPermission } = require('./middlewares/acl');
+const apiGuard = [isAuthenticated, checkPermission(['manage_projects', 'manage_all'])];
+app.get('/api/projects',     ...apiGuard, projectController.apiIndex);
+app.get('/api/projects/:id', ...apiGuard, projectController.apiShow);
+app.post('/api/projects',    ...apiGuard, projectController.apiStore);
 
 // catch 404 and forward to error handler
 app.use(notFoundHandler);

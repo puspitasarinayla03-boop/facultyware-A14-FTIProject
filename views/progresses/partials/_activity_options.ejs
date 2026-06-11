@@ -1,0 +1,6 @@
+<option value="">-- Pilih Kegiatan --</option>
+<% if (typeof activities !== 'undefined') { %>
+  <% activities.forEach(function(act) { %>
+    <option value="<%= act.id %>"><%= act.name %></option>
+  <% }) %>
+<% } %>

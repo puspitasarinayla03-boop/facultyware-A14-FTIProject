@@ -8,15 +8,20 @@ async function getCommittee(id) {
 }
 
 async function getMembers(committeeId) {
-  const [rows] = await db.query(
-    `SELECT cm.id, e.name, cm.role
+  const [internal] = await db.query(
+    `SELECT cm.id, e.name, cm.role, 'internal' AS type
      FROM committee_members cm
      JOIN employees e ON cm.employee_id = e.id
-     WHERE cm.committee_id = ?
-     ORDER BY e.name ASC`,
+     WHERE cm.committee_id = ? ORDER BY e.name ASC`,
     [committeeId]
   );
-  return rows;
+  const [external] = await db.query(
+    `SELECT (cem.id + 1000000) AS id, cem.name, cem.role, 'external' AS type
+     FROM committee_external_members cem
+     WHERE cem.committee_id = ? ORDER BY cem.name ASC`,
+    [committeeId]
+  );
+  return [...internal, ...external];
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -43,12 +48,14 @@ const index = async (req, res, next) => {
 
     const [tasks] = await db.query(
       `SELECT ct.*,
-              e.name AS assigned_name,
-              cm.role AS assigned_role,
+              COALESCE(e.name, cem.name) AS assigned_name,
+              COALESCE(cm.role, cem.role) AS assigned_role,
+              IF(ct.committee_member_id >= 1000000, 'external', 'internal') AS member_type,
               COUNT(ctp.id) AS progress_count
        FROM committee_tasks ct
-       LEFT JOIN committee_members cm ON ct.committee_member_id = cm.id
+       LEFT JOIN committee_members cm ON ct.committee_member_id = cm.id AND ct.committee_member_id < 1000000
        LEFT JOIN employees e ON cm.employee_id = e.id
+       LEFT JOIN committee_external_members cem ON (ct.committee_member_id - 1000000) = cem.id AND ct.committee_member_id >= 1000000
        LEFT JOIN committee_task_progress ctp ON ctp.committee_task_id = ct.id
        WHERE ct.committee_id = ?
        GROUP BY ct.id
@@ -120,10 +127,14 @@ const show = async (req, res, next) => {
     if (!committee) return res.status(404).render('error', { message: 'Kepanitiaan tidak ditemukan.', error: { status: 404, stack: '' } });
 
     const [taskRows] = await db.query(
-      `SELECT ct.*, e.name AS assigned_name, cm.role AS assigned_role
+      `SELECT ct.*,
+              COALESCE(e.name, cem.name) AS assigned_name,
+              COALESCE(cm.role, cem.role) AS assigned_role,
+              IF(ct.committee_member_id >= 1000000, 'external', 'internal') AS member_type
        FROM committee_tasks ct
-       LEFT JOIN committee_members cm ON ct.committee_member_id = cm.id
+       LEFT JOIN committee_members cm ON ct.committee_member_id = cm.id AND ct.committee_member_id < 1000000
        LEFT JOIN employees e ON cm.employee_id = e.id
+       LEFT JOIN committee_external_members cem ON (ct.committee_member_id - 1000000) = cem.id AND ct.committee_member_id >= 1000000
        WHERE ct.id = ? AND ct.committee_id = ?`,
       [taskId, committeeId]
     );

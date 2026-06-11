@@ -250,7 +250,7 @@
                hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
                class="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md border hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-medium text-green-700 dark:text-green-400 border-green-200 dark:border-green-800" id="detail-rab-btn">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-              Kelola RAB / Anggaran
+              Kelola RAB &amp; Pengeluaran
             </a>
             <a href="/committees/<%= committee.id %>/edit"
                hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
@@ -293,7 +293,7 @@
   </dialog>
 
   <script>
-    let _deleteForm = null;
+    var _deleteForm = null;
     function showDeleteModal(form) {
       _deleteForm = form;
       document.getElementById('delete-modal').showModal();

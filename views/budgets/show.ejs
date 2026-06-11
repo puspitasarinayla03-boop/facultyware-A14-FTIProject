@@ -152,14 +152,27 @@
                     <label class="label text-xs">Item Anggaran <span class="text-destructive">*</span></label>
                     <select name="committee_budget_item_id" class="select w-full text-sm" required id="expense-item-select">
                       <option value="">-- Pilih Item --</option>
-                      <% items.forEach(item => { %>
-                        <option value="<%= item.id %>"><%= item.name %> (sisa <%= fmt(parseFloat(item.total_price) - parseFloat(item.used_amount)) %>)</option>
+                      <% items.forEach(item => {
+                        const itemSisa = parseFloat(item.total_price) - parseFloat(item.used_amount);
+                      %>
+                        <option value="<%= item.id %>" data-sisa="<%= itemSisa %>">
+                          <%= item.name %> (sisa <%= fmt(itemSisa) %>)
+                        </option>
                       <% }) %>
                     </select>
+                    <p id="item-sisa-info" class="text-xs text-muted-foreground hidden">
+                      Sisa anggaran item: <strong id="item-sisa-val"></strong>
+                    </p>
+                    <p id="item-habis-warning" class="text-xs text-destructive hidden">
+                      ⚠ Anggaran item ini sudah habis, tidak dapat menambah pengeluaran.
+                    </p>
                   </div>
                   <div class="grid gap-1.5">
                     <label class="label text-xs">Jumlah (Rp) <span class="text-destructive">*</span></label>
                     <input type="number" name="amount" class="input w-full text-sm" min="1" step="1" placeholder="0" required id="expense-amount" />
+                    <p id="amount-over-warning" class="text-xs text-destructive hidden">
+                      ⚠ Jumlah melebihi sisa anggaran item.
+                    </p>
                   </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -220,14 +233,6 @@
                       <div class="flex items-center justify-end gap-1">
                         <% if (exp.receipt_file) { %>
                           <a href="<%= exp.receipt_file %>" target="_blank" class="btn-outline btn-sm text-xs px-2 py-0.5">Bukti</a>
-                        <% } %>
-                        <% if (exp.status === 'submitted') { %>
-                          <form method="POST" action="/committees/<%= committee.id %>/budgets/<%= budget.id %>/expenses/<%= exp.id %>/approve" style="display:inline">
-                            <button type="submit" class="btn btn-sm text-xs px-2 py-0.5 bg-green-600 hover:bg-green-700" id="approve-expense-<%= exp.id %>">Setujui</button>
-                          </form>
-                          <form method="POST" action="/committees/<%= committee.id %>/budgets/<%= budget.id %>/expenses/<%= exp.id %>/reject" style="display:inline">
-                            <button type="submit" class="btn-outline btn-sm text-xs px-2 py-0.5 text-destructive hover:bg-destructive/10" id="reject-expense-<%= exp.id %>">Tolak</button>
-                          </form>
                         <% } %>
                         <form method="POST" action="/committees/<%= committee.id %>/budgets/<%= budget.id %>/expenses/<%= exp.id %>/delete" style="display:inline">
                           <button type="button" onclick="showDeleteModal(this.closest('form'))" class="btn-ghost text-destructive hover:bg-destructive/10 size-6 flex items-center justify-center p-0 rounded" id="del-expense-<%= exp.id %>">
@@ -291,5 +296,66 @@
 
 </main>
 <%- include('../partials/_scripts') %>
+<script>
+(function () {
+  var rabSisa = <%= (parseFloat(budget.total_amount) - parseFloat(budget.used_amount)) || 0 %>;
+  var fmt = function(n) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+  };
+
+  var itemSelect  = document.getElementById('expense-item-select');
+  var amountInput = document.getElementById('expense-amount');
+  var sisakInfo   = document.getElementById('item-sisa-info');
+  var sisakVal    = document.getElementById('item-sisa-val');
+  var habisWarn   = document.getElementById('item-habis-warning');
+  var overWarn    = document.getElementById('amount-over-warning');
+  var submitBtn   = document.getElementById('submit-expense-btn');
+
+  if (!itemSelect) return;
+
+  function updateItemInfo() {
+    var opt = itemSelect.options[itemSelect.selectedIndex];
+    if (!opt || !opt.value) {
+      sisakInfo.classList.add('hidden');
+      habisWarn.classList.add('hidden');
+      amountInput.removeAttribute('max');
+      return;
+    }
+    var sisa = parseFloat(opt.getAttribute('data-sisa')) || 0;
+    var cap  = Math.min(sisa, rabSisa);
+    if (cap <= 0) {
+      sisakInfo.classList.add('hidden');
+      habisWarn.classList.remove('hidden');
+      amountInput.setAttribute('max', '0');
+      submitBtn.disabled = true;
+    } else {
+      habisWarn.classList.add('hidden');
+      sisakInfo.classList.remove('hidden');
+      sisakVal.textContent = fmt(cap);
+      amountInput.setAttribute('max', cap);
+      submitBtn.disabled = false;
+    }
+    checkAmount();
+  }
+
+  function checkAmount() {
+    var opt = itemSelect.options[itemSelect.selectedIndex];
+    if (!opt || !opt.value) return;
+    var sisa = parseFloat(opt.getAttribute('data-sisa')) || 0;
+    var cap  = Math.min(sisa, rabSisa);
+    var val  = parseFloat(amountInput.value) || 0;
+    if (val > cap && val > 0) {
+      overWarn.classList.remove('hidden');
+      submitBtn.disabled = true;
+    } else {
+      overWarn.classList.add('hidden');
+      submitBtn.disabled = (cap <= 0);
+    }
+  }
+
+  itemSelect.addEventListener('change', updateItemInfo);
+  amountInput.addEventListener('input', checkAmount);
+})();
+</script>
 </body>
 </html>

@@ -177,9 +177,9 @@
 </dialog>
 
 <script>
-  const EMPLOYEES = <%- JSON.stringify(employees.map(e => ({ id: e.id, name: e.name, nip: e.employee_number }))) %>;
-  const INITIAL_INTERNAL = <%- JSON.stringify(internalMembers.map(m => ({ empId: m.employee_id, role: m.role }))) %>;
-  const INITIAL_EXTERNAL = <%- JSON.stringify(externalMembers.map(m => ({ name: m.name, institution: m.institution || '', role: m.role }))) %>;
+  var EMPLOYEES = <%- JSON.stringify(employees.map(e => ({ id: e.id, name: e.name, nip: e.employee_number }))) %>;
+  var INITIAL_INTERNAL = <%- JSON.stringify(internalMembers.map(m => ({ empId: m.employee_id, role: m.role }))) %>;
+  var INITIAL_EXTERNAL = <%- JSON.stringify(externalMembers.map(m => ({ name: m.name, institution: m.institution || '', role: m.role }))) %>;
 
   function buildEmployeeOptions(selectedId) {
     return EMPLOYEES.map(e =>
@@ -262,7 +262,7 @@
   INITIAL_EXTERNAL.forEach(m => addExternalRow(m.name, m.institution, m.role));
 
   // Delete modal
-  let _deleteForm = null;
+  var _deleteForm = null;
   function showDeleteModal(form) {
     _deleteForm = form;
     document.getElementById('delete-modal').showModal();

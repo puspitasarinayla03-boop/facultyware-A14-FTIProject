@@ -104,7 +104,7 @@
   </div>
 
   <script>
-    const EXISTING_ITEMS = <%- JSON.stringify(items.map(i => ({
+    var EXISTING_ITEMS = <%- JSON.stringify(items.map(i => ({
       name:       i.name,
       qty:        i.quantity,
       unit_price: parseFloat(i.unit_price) || 0,

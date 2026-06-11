@@ -67,31 +67,97 @@
 
       <form method="POST" action="/progresses" enctype="multipart/form-data" class="grid gap-6">
 
-        <%# ── Informasi Task ── %>
+        <%# ── Informasi Kegiatan & Task ── %>
         <div class="card">
           <header>
-            <h2>Informasi Progress</h2>
-            <p>Pilih task dan isi detail perkembangan yang sudah dilakukan.</p>
+            <h2>Informasi Kegiatan & Task</h2>
+            <p>Pilih jenis kegiatan, nama kegiatan, dan task yang sesuai.</p>
           </header>
 
           <section class="grid gap-5">
+            <%# 1. Pilih Jenis Kegiatan %>
             <div class="grid gap-2">
-              <label for="committee_task_id">Task Project <span class="text-destructive">*</span></label>
-              <select id="committee_task_id" name="committee_task_id" required class="select w-full">
-                <option value="">-- Pilih Task --</option>
-                <% if (typeof tasks !== 'undefined') { %>
-                  <% tasks.forEach(function(task) { %>
-                    <option value="<%= task.id %>"
-                      <%= (typeof old !== 'undefined' && old.committee_task_id == task.id) ? 'selected' : '' %>>
-                      <%= task.committee_name %> — <%= task.title %>
+              <label for="activity_type">Jenis Kegiatan <span class="text-destructive">*</span></label>
+              <select id="activity_type" name="activity_type" required class="select w-full"
+                      hx-get="/progresses/api/activities"
+                      hx-target="#activity_id"
+                      hx-trigger="change"
+                      hx-swap="innerHTML">
+                <option value="project" <%= (typeof old !== 'undefined' && old.activity_type === 'project') ? 'selected' : '' %>>Project</option>
+                <option value="kepanitiaan" <%= (typeof old !== 'undefined' && old.activity_type === 'kepanitiaan') ? 'selected' : '' %>>Kepanitiaan</option>
+              </select>
+            </div>
+
+            <%# 2. Pilih Kegiatan %>
+            <div class="grid gap-2">
+              <label for="activity_id">Nama Kegiatan <span class="text-destructive">*</span></label>
+              <select id="activity_id" name="activity_id" required class="select w-full"
+                      hx-get="/progresses/api/tasks"
+                      hx-target="#committee_task_id"
+                      hx-trigger="change"
+                      hx-swap="innerHTML">
+                <option value="">-- Pilih Kegiatan --</option>
+                <% if (typeof activities !== 'undefined') { %>
+                  <% activities.forEach(function(act) { %>
+                    <option value="<%= act.id %>" <%= (typeof old !== 'undefined' && old.activity_id == act.id) ? 'selected' : '' %>>
+                      <%= act.name %>
                     </option>
                   <% }) %>
                 <% } %>
               </select>
-              <% if (typeof tasks !== 'undefined' && tasks.length === 0) { %>
-                <p class="text-xs text-muted-foreground">
-                  Belum ada task. Silakan buat committee dan task terlebih dahulu.
-                </p>
+            </div>
+
+            <%# 3. Pilih Task %>
+            <div class="grid gap-2">
+              <label for="committee_task_id">Task Kegiatan <span class="text-destructive">*</span></label>
+              <select id="committee_task_id" name="committee_task_id" required class="select w-full"
+                      hx-get="/progresses/api/new-task-fields"
+                      hx-target="#new_task_fields_container"
+                      hx-trigger="change"
+                      hx-include="#activity_type,#activity_id"
+                      hx-swap="innerHTML">
+                <option value="">-- Pilih Task --</option>
+                <% if (typeof tasks !== 'undefined' && tasks.length > 0) { %>
+                  <% tasks.forEach(function(task) { %>
+                    <option value="<%= task.id %>" <%= (typeof old !== 'undefined' && old.committee_task_id == task.id) ? 'selected' : '' %>>
+                      <%= task.title %>
+                    </option>
+                  <% }) %>
+                <% } %>
+                <% if (typeof old !== 'undefined' && old.activity_id) { %>
+                  <option value="new" <%= (typeof old !== 'undefined' && old.committee_task_id === 'new') ? 'selected' : '' %>>[ + Tambah Task Baru ]</option>
+                <% } %>
+              </select>
+            </div>
+
+            <%# Container untuk Input Task Baru (Dinamis via HTMX) %>
+            <div id="new_task_fields_container">
+              <% if (typeof old !== 'undefined' && old.committee_task_id === 'new') { %>
+                <div class="grid gap-4 p-4 border rounded-lg bg-muted/30">
+                  <div class="grid gap-2">
+                    <label for="new_task_title" class="font-medium text-sm">Judul Task Baru <span class="text-destructive">*</span></label>
+                    <input type="text" id="new_task_title" name="new_task_title" required
+                           value="<%= old.new_task_title || '' %>"
+                           placeholder="Contoh: Desain Database, Integrasi API..."
+                           class="input w-full"/>
+                  </div>
+
+                  <% if (old.activity_type === 'kepanitiaan') { %>
+                    <div class="grid gap-2">
+                      <label for="new_task_member_id" class="font-medium text-sm">Penanggung Jawab <span class="text-destructive">*</span></label>
+                      <select id="new_task_member_id" name="new_task_member_id" required class="select w-full">
+                        <option value="">-- Pilih Penanggung Jawab --</option>
+                        <% if (typeof members !== 'undefined') { %>
+                          <% members.forEach(function(member) { %>
+                            <option value="<%= member.id %>" <%= (old.new_task_member_id == member.id) ? 'selected' : '' %>>
+                              <%= member.name %> (<%= member.role %>)
+                            </option>
+                          <% }) %>
+                        <% } %>
+                      </select>
+                    </div>
+                  <% } %>
+                </div>
               <% } %>
             </div>
 

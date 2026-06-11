@@ -59,7 +59,9 @@
             <select id="committee_member_id" name="committee_member_id" class="select w-full" required>
               <option value="">-- Pilih Anggota --</option>
               <% members.forEach(m => { %>
-                <option value="<%= m.id %>" <%= old.committee_member_id == m.id ? 'selected' : '' %>><%= m.name %> — <%= m.role %></option>
+                <option value="<%= m.id %>" <%= old.committee_member_id == m.id ? 'selected' : '' %>>
+                  <%= m.name %> — <%= m.role %><%= m.type === 'external' ? ' (Eksternal)' : '' %>
+                </option>
               <% }) %>
             </select>
             <% if (members.length === 0) { %>

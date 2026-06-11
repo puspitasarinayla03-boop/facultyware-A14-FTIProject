@@ -156,6 +156,20 @@
                           <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
                         </svg>
                       </a>
+                      <a href="/committees/<%= c.id %>/tasks"
+                         hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+                         class="btn-sm-icon-ghost size-7 text-violet-600 hover:text-violet-700 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-900/30" title="Kelola Task">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                      </a>
+                      <a href="/committees/<%= c.id %>/budgets"
+                         hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+                         class="btn-sm-icon-ghost size-7 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30" title="Kelola RAB & Pengeluaran">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+                        </svg>
+                      </a>
                       <a href="/committees/<%= c.id %>/sk" target="_blank"
                          class="btn-sm-icon-ghost size-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30" title="Download SK">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -229,7 +243,7 @@
   </dialog>
 
   <script>
-    let _deleteForm = null;
+    var _deleteForm = null;
     function showDeleteModal(form) {
       _deleteForm = form;
       document.getElementById('delete-modal').showModal();

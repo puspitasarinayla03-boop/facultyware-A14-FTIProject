@@ -111,7 +111,7 @@
   </div>
 
   <script>
-    const INITIAL_ITEMS = <%- (typeof old !== 'undefined' && old['item_name[]']) ? JSON.stringify([].concat(old['item_name[]']).map((n,i) => ({ name: n, qty: ([].concat(old['item_qty[]']||[]))[i]||1, price: ([].concat(old['item_unit_price[]']||[]))[i]||0 }))) : '[]' %>;
+    var INITIAL_ITEMS = <%- (typeof old !== 'undefined' && old['item_name[]']) ? JSON.stringify([].concat(old['item_name[]']).map((n,i) => ({ name: n, qty: ([].concat(old['item_qty[]']||[]))[i]||1, price: ([].concat(old['item_unit_price[]']||[]))[i]||0 }))) : '[]' %>;
 
     function formatRp(n) {
       return new Intl.NumberFormat('id-ID').format(Math.round(n || 0));

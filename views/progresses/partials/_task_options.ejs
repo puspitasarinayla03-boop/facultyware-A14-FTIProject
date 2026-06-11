@@ -1,0 +1,7 @@
+<option value="">-- Pilih Task --</option>
+<% if (typeof tasks !== 'undefined') { %>
+  <% tasks.forEach(function(task) { %>
+    <option value="<%= task.id %>"><%= task.title %></option>
+  <% }) %>
+<% } %>
+<option value="new">[ + Tambah Task Baru ]</option>

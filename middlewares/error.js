@@ -7,8 +7,9 @@ const notFoundHandler = (req, res, next) => {
   next(err);
 };
 
-// error handler — menangani semua error yang di-next() dari middleware/controller
+  // error handler — menangani semua error yang di-next() dari middleware/controller
 const errorHandler = (err, req, res, next) => {
+  console.error('SERVER_ERROR:', err);
   // set locals, only providing error stack in development
   res.locals.message = err.message || 'Terjadi kesalahan pada server.';
   res.locals.error   = req.app.get('env') === 'development' ? err : {};

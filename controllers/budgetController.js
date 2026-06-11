@@ -421,9 +421,47 @@ const expenseStore = (req, res, next) => {
       if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) errors.push('Jumlah pengeluaran wajib diisi dan harus positif.');
       if (!expense_date) errors.push('Tanggal pengeluaran wajib diisi.');
 
+      if (errors.length === 0) {
+        const newAmount = parseFloat(amount);
+
+        // Validasi sisa anggaran per item
+        const [itemCheck] = await db.query(
+          `SELECT cbi.total_price,
+                  COALESCE(SUM(ce.amount), 0) AS item_used
+           FROM committee_budget_items cbi
+           LEFT JOIN committee_expenses ce ON ce.committee_budget_item_id = cbi.id AND ce.status = 'approved'
+           WHERE cbi.id = ? AND cbi.committee_budget_id = ?
+           GROUP BY cbi.id`,
+          [committee_budget_item_id, budgetId]
+        );
+
+        if (itemCheck.length === 0) {
+          errors.push('Item anggaran tidak valid.');
+        } else {
+          const itemSisa = parseFloat(itemCheck[0].total_price) - parseFloat(itemCheck[0].item_used);
+          if (newAmount > itemSisa) {
+            const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+            errors.push(`Pengeluaran melebihi anggaran item. Sisa anggaran item: ${fmt(itemSisa)}.`);
+          }
+        }
+
+        // Validasi sisa total RAB
+        const [rabCheck] = await db.query(
+          'SELECT total_amount, used_amount FROM committee_budgets WHERE id = ?',
+          [budgetId]
+        );
+        if (rabCheck.length > 0) {
+          const rabSisa = parseFloat(rabCheck[0].total_amount) - parseFloat(rabCheck[0].used_amount);
+          if (newAmount > rabSisa) {
+            const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+            errors.push(`Pengeluaran melebihi total RAB. Sisa RAB: ${fmt(rabSisa)}.`);
+          }
+        }
+      }
+
       if (errors.length > 0) {
         if (req.file) fs.unlinkSync(req.file.path);
-        req.session.toast = { message: errors.join('; '), type: 'error' };
+        req.session.toast = { message: errors.join(' '), type: 'error' };
         return res.redirect(`/committees/${committeeId}/budgets/${budgetId}`);
       }
 
@@ -431,12 +469,24 @@ const expenseStore = (req, res, next) => {
 
       await db.query(
         `INSERT INTO committee_expenses
-           (committee_budget_item_id, amount, description, receipt_file, expense_date, status, employee_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, 'submitted', ?, NOW(), NOW())`,
-        [committee_budget_item_id, parseFloat(amount), description || null, receiptFile, expense_date, employeeId]
+           (committee_budget_item_id, amount, description, receipt_file, expense_date, status, approved_by, employee_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, 'approved', ?, ?, NOW(), NOW())`,
+        [committee_budget_item_id, parseFloat(amount), description || null, receiptFile, expense_date, employeeId, employeeId]
       );
 
-      req.session.toast = { message: 'Pengeluaran berhasil diajukan (menunggu persetujuan admin).', type: 'success' };
+      await db.query(
+        `UPDATE committee_budgets cb
+         SET used_amount = (
+           SELECT COALESCE(SUM(ce.amount), 0)
+           FROM committee_expenses ce
+           JOIN committee_budget_items cbi ON ce.committee_budget_item_id = cbi.id
+           WHERE cbi.committee_budget_id = cb.id AND ce.status = 'approved'
+         ), updated_at = NOW()
+         WHERE cb.id = ?`,
+        [budgetId]
+      );
+
+      req.session.toast = { message: 'Pengeluaran berhasil disimpan!', type: 'success' };
       res.redirect(`/committees/${committeeId}/budgets/${budgetId}`);
     } catch (err) { next(err); }
   });

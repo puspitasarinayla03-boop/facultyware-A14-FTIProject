@@ -115,6 +115,16 @@
         window.__formToDelete.submit();
       }
     }
+
+    function triggerDownload(url, filename) {
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'download';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { document.body.removeChild(a); }, 200);
+    }
   </script>
 
   <%# ─── [E4] HTMX Server Error Handler ─────────────────────────────────────── %>

@@ -160,9 +160,9 @@
   </div>
 
   <script>
-    const EMPLOYEES = <%- JSON.stringify(employees.map(e => ({ id: e.id, name: e.name, nip: e.employee_number }))) %>;
-    const INITIAL_INTERNAL = <%- (typeof internalMembers !== 'undefined') ? JSON.stringify(internalMembers.map(m => ({ empId: m.employee_id, role: m.role }))) : '[]' %>;
-    const INITIAL_EXTERNAL = <%- (typeof externalMembers !== 'undefined') ? JSON.stringify(externalMembers.map(m => ({ name: m.name, institution: m.institution || '', role: m.role }))) : '[]' %>;
+    var EMPLOYEES = <%- JSON.stringify(employees.map(e => ({ id: e.id, name: e.name, nip: e.employee_number }))) %>;
+    var INITIAL_INTERNAL = <%- (typeof internalMembers !== 'undefined') ? JSON.stringify(internalMembers.map(m => ({ empId: m.employee_id, role: m.role }))) : '[]' %>;
+    var INITIAL_EXTERNAL = <%- (typeof externalMembers !== 'undefined') ? JSON.stringify(externalMembers.map(m => ({ name: m.name, institution: m.institution || '', role: m.role }))) : '[]' %>;
 
     function buildEmployeeOptions(selectedId) {
       return EMPLOYEES.map(e =>

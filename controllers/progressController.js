@@ -134,12 +134,22 @@ const index = async (req, res, next) => {
 // ─── GET /progresses/create ───────────────────────────────────────────────────
 const create = async (req, res, next) => {
   try {
-    const tasks = await getTaskOptions();
-    const validation = ErrorHandler.validateResponse(tasks);
-    if (!validation.valid) return ErrorHandler.renderError(res, 'E6 - Invalid Response', 'Format data tidak valid.', 500);
+    // Default load: Projects (committees with 0 members)
+    const [activities] = await db.query(
+      `SELECT id, name FROM committees c
+       WHERE (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) = 0
+       ORDER BY name ASC`
+    );
 
-    const defaultOld = req.query.task_id ? { committee_task_id: req.query.task_id } : {};
-    res.render('progresses/create', { title: 'Tambah Progress', tasks, errors: [], old: defaultOld, user: req.session.userName });
+    res.render('progresses/create', {
+      title: 'Tambah Progress',
+      activities,
+      tasks: [],
+      members: [],
+      errors: [],
+      old: { activity_type: 'project' },
+      user: req.session.userName
+    });
 
   } catch (err) {
     const e = ErrorHandler.detectMySQLError(err);
@@ -153,27 +163,64 @@ const create = async (req, res, next) => {
 const store = (req, res, next) => {
   upload(req, res, async (uploadErr) => {
     try {
-      const tasks = await getTaskOptions();
-
       if (uploadErr) {
-        return res.render('progresses/create', { title: 'Tambah Progress', tasks, errors: [uploadErr.message], old: req.body, user: req.session.userName });
+        return renderCreateWithError(req, res, [uploadErr.message]);
       }
 
-      const { committee_task_id, description, status, progress_date } = req.body;
+      const {
+        activity_type,
+        activity_id,
+        committee_task_id,
+        new_task_title,
+        new_task_member_id,
+        description,
+        status,
+        progress_date
+      } = req.body;
+
       const errors = [];
+      if (!activity_type)                      errors.push('Jenis kegiatan wajib dipilih.');
+      if (!activity_id)                        errors.push('Nama kegiatan wajib dipilih.');
       if (!committee_task_id)                  errors.push('Task wajib dipilih.');
       if (!description || !description.trim()) errors.push('Deskripsi progress wajib diisi.');
       if (!status)                             errors.push('Status wajib dipilih.');
       if (!progress_date)                      errors.push('Tanggal progress wajib diisi.');
 
-      if (committee_task_id) {
+      let finalTaskId = committee_task_id;
+
+      if (committee_task_id === 'new') {
+        if (!new_task_title || !new_task_title.trim()) {
+          errors.push('Judul task baru wajib diisi.');
+        }
+        if (activity_type === 'kepanitiaan' && !new_task_member_id) {
+          errors.push('Penanggung jawab task baru wajib dipilih.');
+        }
+
+        if (errors.length === 0) {
+          // For Project: we set committee_member_id to 0 (no FK constraint in DB, safely references nothing)
+          // For Kepanitiaan: use the submitted member id
+          const memberId = activity_type === 'kepanitiaan' ? parseInt(new_task_member_id) : 0;
+
+          const [result] = await db.query(
+            `INSERT INTO committee_tasks
+               (committee_id, committee_member_id, title, status, priority, created_at, updated_at)
+             VALUES (?, ?, ?, 'in_progress', 'medium', NOW(), NOW())`,
+            [activity_id, memberId, new_task_title.trim()]
+          );
+          finalTaskId = result.insertId;
+        }
+      } else if (committee_task_id) {
         const [taskCheck] = await db.query('SELECT id FROM committee_tasks WHERE id = ?', [committee_task_id]);
-        if (taskCheck.length === 0) errors.push('Task yang dipilih tidak valid.');
+        if (taskCheck.length === 0) {
+          errors.push('Task yang dipilih tidak valid.');
+        }
       }
 
       if (errors.length > 0) {
-        if (req.file) fs.unlinkSync(req.file.path);
-        return res.render('progresses/create', { title: 'Tambah Progress', tasks, errors, old: req.body, user: req.session.userName });
+        if (req.file) {
+          try { fs.unlinkSync(req.file.path); } catch (_) {}
+        }
+        return renderCreateWithError(req, res, errors);
       }
 
       const attachment = req.file ? '/uploads/progress/' + req.file.filename : null;
@@ -181,18 +228,142 @@ const store = (req, res, next) => {
         `INSERT INTO committee_task_progress
            (committee_task_id, description, status, progress_date, attachment, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-        [committee_task_id, description.trim(), status, progress_date, attachment]
+        [finalTaskId, description.trim(), status, progress_date, attachment]
       );
 
       req.session.toast = { message: 'Progress berhasil disimpan!', type: 'success' };
       res.redirect('/progresses');
 
     } catch (err) {
+      if (req.file) {
+        try { fs.unlinkSync(req.file.path); } catch (_) {}
+      }
       const e = ErrorHandler.detectMySQLError(err);
       if (e.type === 'E1') return ErrorHandler.renderError(res, 'E1 - Database Connection Error', e.message, 503);
-      return ErrorHandler.renderError(res, 'E2 - Query Error', 'Gagal menyimpan data progress.', 500);
+      return ErrorHandler.renderError(res, 'E2 - Query Error', 'Gagal menyimpan data progress: ' + err.message, 500);
     }
   });
+};
+
+// Helper: re-render form create if validation fails
+async function renderCreateWithError(req, res, errors) {
+  try {
+    const { activity_type, activity_id, committee_task_id } = req.body;
+    let activities = [];
+    if (activity_type === 'project' || activity_type === 'kepanitiaan') {
+      const isProject = activity_type === 'project';
+      const query = isProject
+        ? `SELECT id, name FROM committees c WHERE (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) = 0 ORDER BY name ASC`
+        : `SELECT id, name FROM committees c WHERE (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) > 0 ORDER BY name ASC`;
+      const [rows] = await db.query(query);
+      activities = rows;
+    }
+
+    let tasks = [];
+    if (activity_id) {
+      const [rows] = await db.query('SELECT id, title FROM committee_tasks WHERE committee_id = ? ORDER BY title ASC', [activity_id]);
+      tasks = rows;
+    }
+
+    let members = [];
+    if (activity_type === 'kepanitiaan' && activity_id) {
+      const [rows] = await db.query(
+        `SELECT cm.id, emp.name, cm.role FROM committee_members cm JOIN employees emp ON cm.employee_id = emp.id WHERE cm.committee_id = ? ORDER BY emp.name ASC`,
+        [activity_id]
+      );
+      members = rows;
+    }
+
+    res.render('progresses/create', {
+      title: 'Tambah Progress',
+      activities,
+      tasks,
+      members,
+      errors,
+      old: req.body,
+      user: req.session.userName
+    });
+  } catch (err) {
+    ErrorHandler.renderError(res, 'E2 - Query Error', 'Terjadi kesalahan sistem saat memuat form kembali.', 500);
+  }
+}
+
+// ─── GET /progresses/api/activities ───────────────────────────────────────────
+const apiActivities = async (req, res, next) => {
+  try {
+    const type = req.query.type || req.query.activity_type;
+    let query = '';
+    if (type === 'project') {
+      query = `
+        SELECT id, name FROM committees c
+        WHERE (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) = 0
+        ORDER BY name ASC`;
+    } else if (type === 'kepanitiaan') {
+      query = `
+        SELECT id, name FROM committees c
+        WHERE (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) > 0
+        ORDER BY name ASC`;
+    } else {
+      return res.render('progresses/partials/_activity_options', { activities: [] });
+    }
+    const [activities] = await db.query(query);
+    res.render('progresses/partials/_activity_options', { activities });
+  } catch (err) {
+    console.error('[apiActivities] Error:', err);
+    res.status(500).send('<option value="">Gagal memuat kegiatan</option>');
+  }
+};
+
+// ─── GET /progresses/api/tasks ────────────────────────────────────────────────
+const apiTasks = async (req, res, next) => {
+  try {
+    const committee_id = req.query.committee_id || req.query.activity_id;
+    if (!committee_id) {
+      return res.render('progresses/partials/_task_options', { tasks: [] });
+    }
+    const [tasks] = await db.query(
+      'SELECT id, title FROM committee_tasks WHERE committee_id = ? ORDER BY title ASC',
+      [committee_id]
+    );
+    res.render('progresses/partials/_task_options', { tasks });
+  } catch (err) {
+    console.error('[apiTasks] Error:', err);
+    res.status(500).send('<option value="">Gagal memuat task</option>');
+  }
+};
+
+// ─── GET /progresses/api/new-task-fields ──────────────────────────────────────
+const apiNewTaskFields = async (req, res, next) => {
+  try {
+    const committee_id = req.query.committee_id || req.query.activity_id;
+    const activity_type = req.query.activity_type;
+    const mode = req.query.mode || (req.query.committee_task_id === 'new' ? 'new' : 'select');
+
+    if (mode !== 'new' || !committee_id) {
+      return res.send('');
+    }
+
+    let members = [];
+    if (activity_type === 'kepanitiaan') {
+      [members] = await db.query(
+        `SELECT cm.id, emp.name, cm.role
+         FROM committee_members cm
+         JOIN employees emp ON cm.employee_id = emp.id
+         WHERE cm.committee_id = ?
+         ORDER BY emp.name ASC`,
+        [committee_id]
+      );
+    }
+
+    res.render('progresses/partials/_new_task_fields', {
+      mode,
+      activityType: activity_type,
+      members
+    });
+  } catch (err) {
+    console.error('[apiNewTaskFields] Error:', err);
+    res.status(500).send('<div class="text-destructive text-sm">Gagal memuat field task baru</div>');
+  }
 };
 
 // ─── GET /progresses/:id ──────────────────────────────────────────────────────
@@ -503,11 +674,15 @@ const exportDocx = async (req, res, next) => {
     });
 
     const buffer   = await Packer.toBuffer(doc);
-    const filename = 'progress_' + id + '_' + Date.now() + '.docx';
+    const filename = 'progress_' + id + '.docx';
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
-    res.send(buffer);
+    res.set({
+      'Content-Type':        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length':      buffer.length,
+      'Cache-Control':       'no-store',
+    });
+    res.end(buffer);
 
   } catch (err) {
     console.error('[exportDocx] Error:', err.message);
@@ -518,4 +693,4 @@ const exportDocx = async (req, res, next) => {
 };
 
 // ─── EXPORTS ─────────────────────────────────────────────────────────────────
-module.exports = { index, create, store, show, edit, update, destroy, exportDocx };
+module.exports = { index, create, store, show, edit, update, destroy, exportDocx, apiActivities, apiTasks, apiNewTaskFields };

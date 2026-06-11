@@ -10,6 +10,9 @@ const guard = [isAuthenticated, checkPermission(['manage_projects', 'manage_all'
 // ─── COLLECTION ROUTES ────────────────────────────────────────────────────────
 router.get('/',       ...guard, progressController.index);   // List semua progress
 router.get('/create', ...guard, progressController.create);  // Form tambah (HARUS sebelum /:id)
+router.get('/api/activities', ...guard, progressController.apiActivities);
+router.get('/api/tasks',      ...guard, progressController.apiTasks);
+router.get('/api/new-task-fields', ...guard, progressController.apiNewTaskFields);
 router.post('/',      ...guard, progressController.store);   // Simpan baru
 
 // ─── RESOURCE ROUTES ─────────────────────────────────────────────────────────

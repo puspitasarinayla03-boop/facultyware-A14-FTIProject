@@ -1,0 +1,24 @@
+<% if (typeof mode !== 'undefined' && mode === 'new') { %>
+  <div class="grid gap-4 p-4 border rounded-lg bg-muted/30">
+    <div class="grid gap-2">
+      <label for="new_task_title" class="font-medium text-sm">Judul Task Baru <span class="text-destructive">*</span></label>
+      <input type="text" id="new_task_title" name="new_task_title" required
+             placeholder="Contoh: Desain Database, Integrasi API..."
+             class="input w-full"/>
+    </div>
+
+    <% if (typeof activityType !== 'undefined' && activityType === 'kepanitiaan') { %>
+      <div class="grid gap-2">
+        <label for="new_task_member_id" class="font-medium text-sm">Penanggung Jawab <span class="text-destructive">*</span></label>
+        <select id="new_task_member_id" name="new_task_member_id" required class="select w-full">
+          <option value="">-- Pilih Penanggung Jawab --</option>
+          <% if (typeof members !== 'undefined') { %>
+            <% members.forEach(function(member) { %>
+              <option value="<%= member.id %>"><%= member.name %> (<%= member.role %>)</option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+    <% } %>
+  </div>
+<% } %>
