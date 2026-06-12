@@ -47,32 +47,32 @@
     <div class="max-w-screen-xl mx-auto space-y-6">
 
       <%# ── Hero Summary Card ── %>
-      <div class="card p-6" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1d4ed8 100%); border-radius: var(--radius-lg);">
-        <div style="position:relative; z-index:1;">
-          <p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.55)">RAB · <%= committee.name %></p>
-          <h2 class="text-2xl font-bold text-white mb-1"><%= budget.name %></h2>
-          <% if (budget.description) { %><p class="text-sm mb-4" style="color:rgba(255,255,255,0.7)"><%= budget.description %></p><% } %>
+      <div class="card p-6">
+        <div class="relative z-10">
+          <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">RAB · <%= committee.name %></p>
+          <h2 class="text-2xl font-bold mb-1"><%= budget.name %></h2>
+          <% if (budget.description) { %><p class="text-sm text-muted-foreground mb-4"><%= budget.description %></p><% } %>
 
           <div class="grid grid-cols-3 gap-4 mt-4">
             <div>
-              <p class="text-xs uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.5)">Total Anggaran</p>
-              <p class="text-base font-bold text-white"><%= fmt(total) %></p>
+              <p class="text-xs uppercase tracking-wider text-muted-foreground mb-1">Total Anggaran</p>
+              <p class="text-base font-bold"><%= fmt(total) %></p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.5)">Realisasi</p>
-              <p class="text-base font-bold" style="color:#fbbf24"><%= fmt(used) %></p>
+              <p class="text-xs uppercase tracking-wider text-muted-foreground mb-1">Realisasi</p>
+              <p class="text-base font-bold text-amber-600 dark:text-amber-400"><%= fmt(used) %></p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.5)">Sisa</p>
-              <p class="text-base font-bold" style="color:#34d399"><%= fmt(total - used) %></p>
+              <p class="text-xs uppercase tracking-wider text-muted-foreground mb-1">Sisa</p>
+              <p class="text-base font-bold text-green-600 dark:text-green-400"><%= fmt(total - used) %></p>
             </div>
           </div>
 
           <div class="mt-4">
-            <div class="w-full rounded-full h-2" style="background:rgba(255,255,255,0.15)">
+            <div class="w-full rounded-full h-2 bg-muted">
               <div class="<%= barColor %> h-2 rounded-full" style="width:<%= pct %>%"></div>
             </div>
-            <p class="text-xs mt-1" style="color:rgba(255,255,255,0.5)"><%= pct %>% anggaran terpakai</p>
+            <p class="text-xs text-muted-foreground mt-1"><%= pct %>% anggaran terpakai</p>
           </div>
         </div>
       </div>

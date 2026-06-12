@@ -51,14 +51,12 @@ const index = async (req, res, next) => {
               COALESCE(e.name, cem.name) AS assigned_name,
               COALESCE(cm.role, cem.role) AS assigned_role,
               IF(ct.committee_member_id >= 1000000, 'external', 'internal') AS member_type,
-              COUNT(ctp.id) AS progress_count
+              (SELECT COUNT(*) FROM committee_task_progress ctp WHERE ctp.committee_task_id = ct.id) AS progress_count
        FROM committee_tasks ct
        LEFT JOIN committee_members cm ON ct.committee_member_id = cm.id AND ct.committee_member_id < 1000000
        LEFT JOIN employees e ON cm.employee_id = e.id
-       LEFT JOIN committee_external_members cem ON (ct.committee_member_id - 1000000) = cem.id AND ct.committee_member_id >= 1000000
-       LEFT JOIN committee_task_progress ctp ON ctp.committee_task_id = ct.id
+       LEFT JOIN committee_external_members cem ON ct.committee_member_id = (cem.id + 1000000) AND ct.committee_member_id >= 1000000
        WHERE ct.committee_id = ?
-       GROUP BY ct.id
        ORDER BY ct.created_at DESC`,
       [committeeId]
     );
@@ -134,7 +132,7 @@ const show = async (req, res, next) => {
        FROM committee_tasks ct
        LEFT JOIN committee_members cm ON ct.committee_member_id = cm.id AND ct.committee_member_id < 1000000
        LEFT JOIN employees e ON cm.employee_id = e.id
-       LEFT JOIN committee_external_members cem ON (ct.committee_member_id - 1000000) = cem.id AND ct.committee_member_id >= 1000000
+       LEFT JOIN committee_external_members cem ON ct.committee_member_id = (cem.id + 1000000) AND ct.committee_member_id >= 1000000
        WHERE ct.id = ? AND ct.committee_id = ?`,
       [taskId, committeeId]
     );

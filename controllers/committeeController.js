@@ -30,7 +30,7 @@ const index = async (req, res, next) => {
     const search = req.query.search || '';
     const filterStatus = req.query.status || '';
 
-    const whereClauses = ['(SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) > 0'];
+    const whereClauses = ['((SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) + (SELECT COUNT(*) FROM committee_external_members cem WHERE cem.committee_id = c.id)) > 0'];
     const params = [];
 
     if (search) {
@@ -52,7 +52,7 @@ const index = async (req, res, next) => {
     const [committees] = await db.query(
       `SELECT c.id, c.name, c.status, c.start_date, c.end_date, c.created_at,
               emp.name AS creator_name,
-              (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) AS member_count
+              ((SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = c.id) + (SELECT COUNT(*) FROM committee_external_members cem WHERE cem.committee_id = c.id)) AS member_count
        FROM committees c
        LEFT JOIN employees emp ON c.created_by = emp.id
        ${whereSQL}
@@ -79,7 +79,7 @@ const create = async (req, res, next) => {
     // List committees (projects) that have NO members yet
     const [projects] = await db.query(
       `SELECT id, name, start_date, end_date FROM committees
-       WHERE (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = committees.id) = 0
+       WHERE ((SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = committees.id) + (SELECT COUNT(*) FROM committee_external_members cem WHERE cem.committee_id = committees.id)) = 0
        ORDER BY name ASC`
     );
     const [employees] = await db.query(
@@ -113,7 +113,7 @@ const store = async (req, res, next) => {
     if (errors.length > 0) {
       const [projects] = await db.query(
         `SELECT id, name, start_date, end_date FROM committees
-         WHERE (SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = committees.id) = 0
+         WHERE ((SELECT COUNT(*) FROM committee_members cm WHERE cm.committee_id = committees.id) + (SELECT COUNT(*) FROM committee_external_members cem WHERE cem.committee_id = committees.id)) = 0
          ORDER BY name ASC`
       );
       const [employees] = await db.query(
@@ -343,7 +343,7 @@ const exportSK = async (req, res, next) => {
       ...externalMembers.map(m => ({ ...m, is_leader: 0, source: 'external' })),
     ];
 
-    const skNumber = `SK/${String(committee.id).padStart(4, '0')}/${new Date().getFullYear()}/FTI`;
+    const skNumber = `SK/     /${new Date().getFullYear()}/FTI`;
     const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const startFmt = committee.start_date
       ? new Date(committee.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -465,7 +465,7 @@ const exportSK = async (req, res, next) => {
                   new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: ':', font: 'Times New Roman', size: 24 })], alignment: AlignmentType.CENTER })] }),
                   new TableCell({
                     children: [
-                      new Paragraph({ children: [new TextRun({ text: `a. Bahwa dalam rangka ${committee.objective || 'mendukung kegiatan'}, dipandang perlu membentuk kepanitiaan;`, font: 'Times New Roman', size: 24 })], alignment: AlignmentType.JUSTIFIED }),
+                      new Paragraph({ children: [new TextRun({ text: `a. Bahwa dalam rangka kegiatan ${committee.name}, dipandang perlu membentuk kepanitiaan;`, font: 'Times New Roman', size: 24 })], alignment: AlignmentType.JUSTIFIED }),
                       new Paragraph({ children: [new TextRun({ text: 'b. Bahwa berdasarkan pertimbangan pada huruf "a" perlu ditetapkan dengan Keputusan Dekan;', font: 'Times New Roman', size: 24 })], alignment: AlignmentType.JUSTIFIED }),
                     ]
                   }),
