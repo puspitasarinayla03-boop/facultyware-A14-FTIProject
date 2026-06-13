@@ -35,6 +35,49 @@ async function getCommittee(id) {
 }
 
 // =============================================================================
+// RAB SELECTOR — GET /budgets
+// =============================================================================
+
+const rabSelector = async (req, res, next) => {
+  try {
+    const [committees] = await db.query(
+      `SELECT c.id, c.name, c.status,
+              COUNT(DISTINCT cb.id) AS budget_count
+       FROM committees c
+       LEFT JOIN committee_budgets cb ON cb.committee_id = c.id
+       GROUP BY c.id
+       ORDER BY c.created_at DESC`
+    );
+    res.render('budgets/selector', {
+      title: 'Kelola RAB',
+      user: req.session.userName,
+      committees,
+    });
+  } catch (err) { next(err); }
+};
+
+// GET /expenses — selector: pilih kepanitiaan untuk masuk ke expenses-nya
+const expenseSelector = async (req, res, next) => {
+  try {
+    const [committees] = await db.query(
+      `SELECT c.id, c.name, c.status,
+              COUNT(DISTINCT ce.id) AS expense_count
+       FROM committees c
+       LEFT JOIN committee_budgets cb ON cb.committee_id = c.id
+       LEFT JOIN committee_budget_items cbi ON cbi.committee_budget_id = cb.id
+       LEFT JOIN committee_expenses ce ON ce.committee_budget_item_id = cbi.id
+       GROUP BY c.id
+       ORDER BY c.created_at DESC`
+    );
+    res.render('expenses/selector', {
+      title: 'Kelola Expenses',
+      user: req.session.userName,
+      committees,
+    });
+  } catch (err) { next(err); }
+};
+
+// =============================================================================
 // BUDGET CRUD
 // =============================================================================
 
@@ -555,6 +598,7 @@ const expenseDestroy = async (req, res, next) => {
 };
 
 module.exports = {
+  rabSelector, expenseSelector,
   budgetIndex, budgetCreate, budgetStore, budgetShow, budgetEdit, budgetUpdate, budgetDestroy,
   exportExcel,
   expenseStore, expenseApprove, expenseReject, expenseDestroy,

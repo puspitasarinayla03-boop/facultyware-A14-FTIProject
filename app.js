@@ -65,6 +65,7 @@ app.use((req, res, next) => {
     res.locals.toast = req.session.toast;
     delete req.session.toast;
   }
+  res.locals.reqPath = req.path;
   next();
 });
 
@@ -82,6 +83,12 @@ app.use('/dashboard', dashboardRouter);
 const projectController  = require('./controllers/projectController');
 const { isAuthenticated } = require('./middlewares/auth');
 const { checkPermission } = require('./middlewares/acl');
+const { rabSelector, expenseSelector } = require('./controllers/budgetController');
+const { taskSelector } = require('./controllers/taskController');
+const selectorGuard = [isAuthenticated, checkPermission(['manage_committees', 'manage_all'])];
+app.get('/budgets',   ...selectorGuard, rabSelector);
+app.get('/tasks',     ...selectorGuard, taskSelector);
+app.get('/expenses',  ...selectorGuard, expenseSelector);
 const apiGuard = [isAuthenticated, checkPermission(['manage_projects', 'manage_all'])];
 app.get('/api/projects',     ...apiGuard, projectController.apiIndex);
 app.get('/api/projects/:id', ...apiGuard, projectController.apiShow);

@@ -217,4 +217,23 @@ const destroy = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { index, create, store, show, edit, update, destroy };
+// GET /tasks — selector: pilih kepanitiaan untuk masuk ke task-nya
+const taskSelector = async (req, res, next) => {
+  try {
+    const [committees] = await db.query(
+      `SELECT c.id, c.name, c.status,
+              COUNT(DISTINCT ct.id) AS task_count
+       FROM committees c
+       LEFT JOIN committee_tasks ct ON ct.committee_id = c.id
+       GROUP BY c.id
+       ORDER BY c.created_at DESC`
+    );
+    res.render('tasks/selector', {
+      title: 'Kelola Task',
+      user: req.session.userName,
+      committees,
+    });
+  } catch (err) { next(err); }
+};
+
+module.exports = { taskSelector, index, create, store, show, edit, update, destroy };

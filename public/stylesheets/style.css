@@ -1,8 +1,9 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
+/* FacultyWare custom overrides — loaded after Basecoat */
 
-a {
-  color: #00B7FF;
+/* Textarea: lebih nyaman dibaca dengan line-height lebih lega dan resize manual */
+.textarea {
+  line-height: 1.6;
+  resize: vertical;
+  field-sizing: initial; /* override Basecoat auto-grow agar resize bekerja normal */
+  font-size: 0.875rem;
 }

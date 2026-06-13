@@ -1,275 +1,319 @@
 <%# Sidebar navigation — FTI Module %>
 <script>
+  // Toggle satu submenu: buka jika tertutup, tutup jika terbuka
+  function toggleSidebarSub(subId, chevronId, btn) {
+    const el      = document.getElementById(subId);
+    const chevron = document.getElementById(chevronId);
+    if (!el) return;
+    const isOpen = el.style.maxHeight && el.style.maxHeight !== '0px';
+    el.style.maxHeight = isOpen ? '0px' : el.scrollHeight + 'px';
+    if (btn)    btn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+  }
+
   (() => {
-    document.addEventListener("DOMContentLoaded", () => {
-      const sidebar = document.getElementById("sidebar");
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.getElementById('sidebar');
       if (!sidebar) return;
 
-      const updateCurrentLinks = () => {
-        const currentPath = window.location.pathname.replace(/\/$/, "");
+      // Sinkronkan satu submenu: buka atau tutup sesuai flag shouldBeOpen
+      function syncSubmenu(subId, btnId, chevronId, shouldBeOpen) {
+        const sub     = document.getElementById(subId);
+        const btn     = document.getElementById(btnId);
+        const chevron = document.getElementById(chevronId);
+        if (!sub) return;
+        const isOpen = sub.style.maxHeight && sub.style.maxHeight !== '0px';
+        if (shouldBeOpen && !isOpen) {
+          sub.style.maxHeight = sub.scrollHeight + 'px';
+          if (btn)    btn.setAttribute('aria-expanded', 'true');
+          if (chevron) chevron.style.transform = 'rotate(180deg)';
+        } else if (!shouldBeOpen && isOpen) {
+          sub.style.maxHeight = '0px';
+          if (btn)    btn.setAttribute('aria-expanded', 'false');
+          if (chevron) chevron.style.transform = '';
+        }
+      }
 
-        sidebar.querySelectorAll("a").forEach((a) => {
-          const href = a.getAttribute("href");
-          if (!href) return;
+      function updateSidebar() {
+        const p = window.location.pathname.replace(/\/$/, '');
 
+        // Tandai link aktif
+        sidebar.querySelectorAll('a[href]').forEach(a => {
           try {
-            const url = new URL(href, window.location.origin);
-            const itemPath = url.pathname.replace(/\/$/, "");
-
-            if (itemPath === currentPath) {
-              a.setAttribute("aria-current", "page");
-            } else {
-              a.removeAttribute("aria-current");
-            }
-
-          } catch (_) { }
+            const ap = new URL(a.getAttribute('href'), window.location.origin).pathname.replace(/\/$/, '');
+            if (ap === p) a.setAttribute('aria-current', 'page');
+            else          a.removeAttribute('aria-current');
+          } catch (_) {}
         });
 
+        // Kepanitiaan: /committees, /committees/*, /budgets
+        syncSubmenu(
+          'committees-sub', 'committees-sub-btn', 'committees-sub-chevron',
+          p === '/committees' || p.startsWith('/committees/') || p === '/budgets'
+        );
 
-      };
+        // Progress: /progresses, /tasks, /tasks/*, /expenses, /expenses/*
+        syncSubmenu(
+          'progress-sub', 'progress-sub-btn', 'progress-sub-chevron',
+          p === '/progresses' || p.startsWith('/progresses/') ||
+          p === '/tasks'      || p.startsWith('/tasks/')      ||
+          p === '/expenses'   || p.startsWith('/expenses/')
+        );
+      }
 
-      document.addEventListener("htmx:afterSettle", updateCurrentLinks);
-      window.addEventListener("popstate", updateCurrentLinks);
-
-      updateCurrentLinks();
+      document.addEventListener('htmx:afterSettle', updateSidebar);
+      window.addEventListener('popstate', updateSidebar);
+      updateSidebar();
     });
   })();
 </script>
 
-<aside id="sidebar" class="sidebar" data-side="left" aria-hidden="false">
+<%
+  // ── Server-side route detection (untuk initial render tanpa flash) ──────────
+  const _rp = typeof reqPath !== 'undefined' ? reqPath : '/';
 
+  const isCommitteesSection =
+    _rp === '/committees' || _rp.startsWith('/committees/') || _rp === '/budgets';
+
+  const isProgressSection =
+    _rp === '/progresses' || _rp.startsWith('/progresses/') ||
+    _rp === '/tasks'      || _rp.startsWith('/tasks/')      ||
+    _rp === '/expenses'   || _rp.startsWith('/expenses/');
+%>
+
+<aside id="sidebar" class="sidebar" data-side="left" aria-hidden="false">
   <nav aria-label="Sidebar navigation">
 
-    <%# ── Branding ─────────────────────────────────────────────────────────── %>
-
+    <%# ── Branding ──────────────────────────────────────────────────────────── %>
     <header>
-
-      <a
-        href="/projects"
-        hx-boost="true"
-        hx-select="#content"
-        hx-target="#content"
-        hx-swap="outerHTML"
-        class="btn-ghost p-2 h-14 w-full justify-start gap-3"
-      >
-
-        <div
-          class="bg-primary text-primary-foreground flex aspect-square size-9 items-center justify-center rounded-lg shrink-0"
-        >
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-            <path d="M6 12v5c3 3 9 3 12 0v-5" />
-          </svg>
-
-        </div>
-
-        <div class="grid flex-1 text-left leading-tight">
-          <span class="truncate font-semibold text-sm">
-            FacultyWare
-          </span>
-
-          <span class="truncate text-xs text-muted-foreground">
-            FTI Project
-          </span>
-        </div>
-
-      </a>
-
-    </header>
-
-    <%# ── Navigation ──────────────────────────────────────────────────────── %>
-
-    <section class="scrollbar flex flex-col gap-1 overflow-x-hidden overflow-y-auto py-3 px-2">
-
-      <%# ── Section: Kelola ─────────────────────────────────────────────────── %>
-      <p class="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Kelola</p>
-
-      <%# ── Dashboard Project ──────────────────────────────────────────────── %>
-
       <a
         href="/dashboard"
-        hx-boost="true"
-        hx-select="#content"
-        hx-target="#content"
-        hx-swap="outerHTML"
-        class="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
+        hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+        class="btn-ghost p-2 h-14 w-full justify-start gap-3"
       >
+        <div class="bg-primary text-primary-foreground flex aspect-square size-9 items-center justify-center rounded-lg shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div class="grid flex-1 text-left leading-tight">
+          <span class="truncate font-semibold text-sm">FacultyWare</span>
+          <span class="truncate text-xs text-muted-foreground">FTI Project</span>
+        </div>
+      </a>
+    </header>
 
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="shrink-0"
-        >
-          <rect width="7" height="9" x="3" y="3" rx="1" />
-          <rect width="7" height="5" x="14" y="3" rx="1" />
-          <rect width="7" height="9" x="14" y="12" rx="1" />
-          <rect width="7" height="5" x="3" y="16" rx="1" />
+    <%# ── Navigation ────────────────────────────────────────────────────────── %>
+    <section class="scrollbar flex flex-col gap-1 overflow-x-hidden overflow-y-auto py-3 px-2">
+
+      <%# ═══════════════════════════════════════════════════════════════════════
+          SECTION: KELOLA
+      ══════════════════════════════════════════════════════════════════════════ %>
+
+      <%# ── Dashboard ─────────────────────────────────────────────────────── %>
+      <a
+        href="/dashboard"
+        hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+        class="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium
+               hover:bg-accent hover:text-accent-foreground transition-colors
+               [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+          <rect width="7" height="9" x="3" y="3" rx="1"/>
+          <rect width="7" height="5" x="14" y="3" rx="1"/>
+          <rect width="7" height="9" x="14" y="12" rx="1"/>
+          <rect width="7" height="5" x="3" y="16" rx="1"/>
         </svg>
-
-        <span>Dashboard Project</span>
-
+        <span>Dashboard</span>
       </a>
 
-      <%# ── Kelola Proyek ─────────────────────────────────────────────────── %>
-
+      <%# ── Kelola Proyek ──────────────────────────────────────────────────── %>
       <a
         href="/projects"
-        hx-boost="true"
-        hx-select="#content"
-        hx-target="#content"
-        hx-swap="outerHTML"
-        class="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
+        hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+        class="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium
+               hover:bg-accent hover:text-accent-foreground transition-colors
+               [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
       >
-
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="shrink-0"
-        >
-          <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-          <path d="M12 11h4" />
-          <path d="M12 16h4" />
-          <path d="M8 11h.01" />
-          <path d="M8 16h.01" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+          <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>
         </svg>
-
         <span>Kelola Proyek</span>
-
       </a>
 
-      <%# ── Kelola Kepanitiaan ───────────────────────────────────────────── %>
+      <%# ═══════════════════════════════════════════════════════════════════════
+          SECTION: KEPANITIAAN (collapsible)
+          Active routes: /committees, /committees/*, /budgets
+      ══════════════════════════════════════════════════════════════════════════ %>
 
-      <a
-        href="/committees"
-        hx-boost="true"
-        hx-select="#content"
-        hx-target="#content"
-        hx-swap="outerHTML"
-        class="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
-      >
+      <div>
+        <%# Row: link navigasi kiri + tombol chevron kanan %>
+        <div class="flex items-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors
+                    [&:has(a[aria-current='page'])]:bg-accent [&:has(a[aria-current='page'])]:text-accent-foreground">
 
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="shrink-0"
+          <a
+            href="/committees"
+            hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+            class="flex items-center gap-2.5 px-2 py-2 text-sm font-medium flex-1 min-w-0 rounded-l-md
+                   [&[aria-current='page']]:text-accent-foreground"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Kelola Kepanitiaan</span>
+          </a>
+
+          <button
+            type="button"
+            id="committees-sub-btn"
+            onclick="toggleSidebarSub('committees-sub', 'committees-sub-chevron', this)"
+            aria-expanded="<%= isCommitteesSection ? 'true' : 'false' %>"
+            aria-label="Toggle submenu Kepanitiaan"
+            class="shrink-0 flex items-center justify-center w-8 py-2 rounded-r-md"
+          >
+            <svg
+              id="committees-sub-chevron"
+              xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+              style="transition: transform 0.2s ease; flex-shrink: 0;<%= isCommitteesSection ? ' transform: rotate(180deg);' : '' %>"
+            >
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+
+        </div>
+
+        <%# Submenu Kepanitiaan %>
+        <div
+          id="committees-sub"
+          style="overflow: hidden; max-height: <%= isCommitteesSection ? '200px' : '0' %>; transition: max-height 0.25s ease-out;"
         >
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
+          <div class="pl-4 pr-1 pt-0.5 pb-1 space-y-0.5">
 
-        <span>Kelola Kepanitiaan</span>
+            <a
+              href="/budgets"
+              hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+              class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground
+                     hover:bg-accent hover:text-accent-foreground transition-colors
+                     [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
+            >
+              <span class="size-1.5 rounded-full bg-current shrink-0 ml-0.5"></span>
+              <span>Kelola RAB</span>
+            </a>
 
-      </a>
+          </div>
+        </div>
+      </div>
 
+      <%# ═══════════════════════════════════════════════════════════════════════
+          SECTION: PROGRESS (collapsible)
+          Active routes: /progresses, /tasks, /tasks/*, /expenses, /expenses/*
+      ══════════════════════════════════════════════════════════════════════════ %>
 
+      <div>
+        <%# Row: link navigasi kiri + tombol chevron kanan %>
+        <div class="flex items-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors
+                    [&:has(a[aria-current='page'])]:bg-accent [&:has(a[aria-current='page'])]:text-accent-foreground">
 
-      <%# ── Progress Project ──────────────────────────────────────────────── %>
+          <a
+            href="/progresses"
+            hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+            class="flex items-center gap-2.5 px-2 py-2 text-sm font-medium flex-1 min-w-0 rounded-l-md
+                   [&[aria-current='page']]:text-accent-foreground"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+              <path d="M3 3v18h18"/>
+              <path d="M7 14l3-3 2 2 5-5"/>
+            </svg>
+            <span>Kelola Progress</span>
+          </a>
 
-      <a
-        href="/progresses"
-        hx-boost="true"
-        hx-select="#content"
-        hx-target="#content"
-        hx-swap="outerHTML"
-        class="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
-      >
+          <button
+            type="button"
+            id="progress-sub-btn"
+            onclick="toggleSidebarSub('progress-sub', 'progress-sub-chevron', this)"
+            aria-expanded="<%= isProgressSection ? 'true' : 'false' %>"
+            aria-label="Toggle submenu Progress"
+            class="shrink-0 flex items-center justify-center w-8 py-2 rounded-r-md"
+          >
+            <svg
+              id="progress-sub-chevron"
+              xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+              style="transition: transform 0.2s ease; flex-shrink: 0;<%= isProgressSection ? ' transform: rotate(180deg);' : '' %>"
+            >
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
 
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="shrink-0"
+        </div>
+
+        <%# Submenu Progress %>
+        <div
+          id="progress-sub"
+          style="overflow: hidden; max-height: <%= isProgressSection ? '200px' : '0' %>; transition: max-height 0.25s ease-out;"
         >
-          <path d="M3 3v18h18" />
-          <path d="M7 14l3-3 2 2 5-5" />
-        </svg>
+          <div class="pl-4 pr-1 pt-0.5 pb-1 space-y-0.5">
 
-        <span>Progress &amp; Aktivitas</span>
+            <a
+              href="/tasks"
+              hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+              class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground
+                     hover:bg-accent hover:text-accent-foreground transition-colors
+                     [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
+            >
+              <span class="size-1.5 rounded-full bg-current shrink-0 ml-0.5"></span>
+              <span>Kelola Task</span>
+            </a>
 
-      </a>
+            <a
+              href="/expenses"
+              hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+              class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground
+                     hover:bg-accent hover:text-accent-foreground transition-colors
+                     [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
+            >
+              <span class="size-1.5 rounded-full bg-current shrink-0 ml-0.5"></span>
+              <span>Kelola Expenses</span>
+            </a>
 
+          </div>
+        </div>
+      </div>
 
-
-      <%# ── Progress & Aktivitas ───────────────────────────────────────────── %>
+      <%# ═══════════════════════════════════════════════════════════════════════
+          SECTION: LAPORAN
+      ══════════════════════════════════════════════════════════════════════════ %>
 
       <a
         href="/reports/progress"
-        hx-boost="true"
-        hx-select="#content"
-        hx-target="#content"
-        hx-swap="outerHTML"
-        class="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
+        hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+        class="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium
+               hover:bg-accent hover:text-accent-foreground transition-colors
+               [&[aria-current='page']]:bg-accent [&[aria-current='page']]:text-accent-foreground"
       >
-
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="shrink-0"
-        >
-          <rect width="18" height="18" x="3" y="3" rx="2" />
-          <path d="M9 17v-5" />
-          <path d="M12 17V9" />
-          <path d="M15 17v-3" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+          <rect width="18" height="18" x="3" y="3" rx="2"/>
+          <path d="M9 17v-5M12 17V9M15 17v-3"/>
         </svg>
-
         <span>Laporan Progress</span>
-
       </a>
 
     </section>
 
-    <%# ── User / Logout Footer ───────────────────────────────────────────── %>
-
+    <%# ── User / Logout Footer ───────────────────────────────────────────────── %>
     <footer class="border-t px-2 py-2">
-
       <div id="user-popover" class="popover w-full">
 
         <button
@@ -280,40 +324,17 @@
           data-keep-mobile-sidebar-open=""
           class="btn-ghost p-2 h-12 w-full flex items-center gap-2.5 justify-start"
         >
-
-          <div
-            class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold text-sm shrink-0"
-          >
+          <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold text-sm shrink-0">
             <%= user ? user.charAt(0).toUpperCase() : 'A' %>
           </div>
-
           <div class="grid flex-1 text-left text-sm leading-tight">
-
-            <span class="truncate font-medium">
-              <%= user || 'Admin' %>
-            </span>
-
-            <span class="truncate text-xs text-muted-foreground">
-              Administrator
-            </span>
-
+            <span class="truncate font-medium"><%= user || 'Admin' %></span>
+            <span class="truncate text-xs text-muted-foreground">Administrator</span>
           </div>
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="m7 15 5 5 5-5" />
-            <path d="m7 9 5-5 5 5" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>
           </svg>
-
         </button>
 
         <div
@@ -323,50 +344,27 @@
           data-side="top"
           class="w-[220px] p-1"
         >
-
           <div class="px-2 py-1.5 border-b mb-1">
-
-            <p class="text-sm font-semibold">
-              <%= user || 'Admin' %>
-            </p>
-
-            <p class="text-xs text-muted-foreground">
-              FTI Administrator
-            </p>
-
+            <p class="text-sm font-semibold"><%= user || 'Admin' %></p>
+            <p class="text-xs text-muted-foreground">FTI Administrator</p>
           </div>
 
           <a
             href="/logout"
             class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
           >
-
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-
             <span>Logout</span>
-
           </a>
-
         </div>
 
       </div>
-
     </footer>
 
   </nav>
-
 </aside>

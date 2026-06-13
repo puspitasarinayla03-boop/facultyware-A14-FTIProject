@@ -6,46 +6,43 @@
 <%- include('../partials/_sidebar', { user: user }) %>
 
 <main id="content">
+
+  <%# ── Header ─────────────────────────────────────────────────────────────── %>
   <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10 px-4 h-14">
     <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" aria-label="Toggle sidebar" class="btn-sm-icon-ghost md:hidden mr-2 size-7 -ml-1.5">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
     </button>
-    <div class="flex flex-1 items-center gap-4">
-      <h1 class="text-base font-semibold" id="dashboard-title">Dashboard Project</h1>
+    <div class="flex flex-1 items-center gap-2">
+      <h1 class="text-base font-semibold">Dashboard Project</h1>
     </div>
     <div class="ml-auto flex items-center gap-2">
       <button type="button" aria-label="Toggle dark mode" onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))" class="btn-icon-outline size-8 flex items-center justify-center shrink-0">
         <span class="hidden dark:block">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
         </span>
         <span class="block dark:hidden">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
         </span>
       </button>
     </div>
   </header>
 
   <div class="p-4 md:p-6 lg:p-8 bg-muted/20 min-h-[calc(100vh-3.5rem)]">
-    <div class="max-w-screen-xl mx-auto space-y-6">
+    <div class="max-w-screen-xl mx-auto space-y-5">
 
-      <!-- Error Notification Bar -->
+      <%# ── Error bar ──────────────────────────────────────────────────────── %>
       <div id="error-container" class="hidden rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-center justify-between">
         <span id="error-message">Terjadi kesalahan.</span>
-        <button onclick="document.getElementById('error-container').classList.add('hidden')" class="text-destructive font-bold hover:opacity-80">×</button>
+        <button onclick="document.getElementById('error-container').classList.add('hidden')" class="text-destructive font-bold hover:opacity-80 ml-4">×</button>
       </div>
 
-      <!-- Filters Panel -->
-      <div class="card p-5">
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Filter Dashboard</h2>
-        <form id="filter-form" class="flex flex-row flex-wrap items-end gap-4">
-          <!-- Kepanitiaan -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+      <%# ── Filter bar ─────────────────────────────────────────────────────── %>
+      <div class="card px-4 py-3">
+        <form id="filter-form" class="flex flex-wrap items-end gap-3">
+
+          <div class="flex flex-col gap-1 flex-1 min-w-[160px]">
             <label for="filter-committee" class="text-xs font-medium text-muted-foreground">Kepanitiaan</label>
             <select id="filter-committee" name="committee" class="select w-full text-xs">
               <option value="">Semua Kepanitiaan</option>
@@ -55,8 +52,7 @@
             </select>
           </div>
 
-          <!-- Status -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+          <div class="flex flex-col gap-1 flex-1 min-w-[160px]">
             <label for="filter-status" class="text-xs font-medium text-muted-foreground">Status Progress</label>
             <select id="filter-status" name="status" class="select w-full text-xs">
               <option value="">Semua Status</option>
@@ -65,412 +61,390 @@
             </select>
           </div>
 
-          <!-- Start Date -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+          <div class="flex flex-col gap-1 flex-1 min-w-[140px]">
             <label for="filter-start-date" class="text-xs font-medium text-muted-foreground">Tanggal Mulai</label>
             <input type="date" id="filter-start-date" name="start_date" class="input w-full text-xs" />
           </div>
 
-          <!-- End Date -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+          <div class="flex flex-col gap-1 flex-1 min-w-[140px]">
             <label for="filter-end-date" class="text-xs font-medium text-muted-foreground">Tanggal Akhir</label>
             <input type="date" id="filter-end-date" name="end_date" class="input w-full text-xs" />
           </div>
-        </form>
-        <div class="flex justify-end mt-4">
-          <button type="button" id="reset-filters-btn" class="btn btn-sm-ghost text-xs text-muted-foreground hover:bg-muted gap-1.5">
+
+          <%# Reset: btn-outline + self-end agar rata bawah dengan input %>
+          <button type="button" id="reset-filters-btn"
+                  class="btn-outline self-end flex items-center gap-1.5 text-xs px-3 h-9 shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-              <path d="M3 3v5h5"/>
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
             </svg>
-            Reset Filter
+            Reset
           </button>
-        </div>
+
+        </form>
       </div>
 
-      <!-- Dashboard Statistics Row -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <!-- Total Projects -->
-        <div class="card p-5 flex flex-row items-center justify-between gap-4 text-left">
-          <div>
-            <p class="text-xs text-muted-foreground uppercase font-semibold">Total Proyek</p>
-            <p id="stat-projects" class="text-2xl font-bold mt-1">0</p>
+      <%# ── Stat cards: auto-fit grid, label+icon top, big number bottom %>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+
+        <%# Card 1 — Total Proyek %>
+        <div class="card" style="padding:1.25rem; min-height:110px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <p style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;" class="text-muted-foreground">Total Proyek</p>
+            <div class="size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
           </div>
-          <div class="size-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-            </svg>
-          </div>
+          <p id="stat-projects" style="font-size:28px; font-weight:600; margin-top:8px; line-height:1; font-variant-numeric:tabular-nums;">0</p>
         </div>
 
-        <!-- Total Tasks -->
-        <div class="card p-5 flex flex-row items-center justify-between gap-4 text-left">
-          <div>
-            <p class="text-xs text-muted-foreground uppercase font-semibold">Total Task</p>
-            <p id="stat-tasks" class="text-2xl font-bold mt-1">0</p>
+        <%# Card 2 — Total Task %>
+        <div class="card" style="padding:1.25rem; min-height:110px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <p style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;" class="text-muted-foreground">Total Task</p>
+            <div class="size-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>
+              </svg>
+            </div>
           </div>
-          <div class="size-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17h6"/><path d="M9 12h6"/><path d="M9 7h6"/>
-            </svg>
-          </div>
+          <p id="stat-tasks" style="font-size:28px; font-weight:600; margin-top:8px; line-height:1; font-variant-numeric:tabular-nums;">0</p>
         </div>
 
-        <!-- Total Progress -->
-        <div class="card p-5 flex flex-row items-center justify-between gap-4 text-left">
-          <div>
-            <p class="text-xs text-muted-foreground uppercase font-semibold">Total Progress</p>
-            <p id="stat-progress" class="text-2xl font-bold mt-1">0</p>
+        <%# Card 3 — Total Progress %>
+        <div class="card" style="padding:1.25rem; min-height:110px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <p style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;" class="text-muted-foreground">Total Progress</p>
+            <div class="size-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>
+              </svg>
+            </div>
           </div>
-          <div class="size-12 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
-            </svg>
-          </div>
+          <p id="stat-progress" style="font-size:28px; font-weight:600; margin-top:8px; line-height:1; font-variant-numeric:tabular-nums;">0</p>
         </div>
 
-        <!-- Done Progress -->
-        <div class="card p-5 flex flex-row items-center justify-between gap-4 text-left">
-          <div>
-            <p class="text-xs text-muted-foreground uppercase font-semibold">Selesai</p>
-            <p id="stat-done" class="text-2xl font-bold mt-1">0</p>
+        <%# Card 4 — Selesai %>
+        <div class="card" style="padding:1.25rem; min-height:110px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <p style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;" class="text-muted-foreground">Selesai</p>
+            <div class="size-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
           </div>
-          <div class="size-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </div>
+          <p id="stat-done" style="font-size:28px; font-weight:600; margin-top:8px; line-height:1; font-variant-numeric:tabular-nums;">0</p>
         </div>
 
-        <!-- Ongoing Progress -->
-        <div class="card p-5 flex flex-row items-center justify-between gap-4 text-left">
-          <div>
-            <p class="text-xs text-muted-foreground uppercase font-semibold">Sedang Berlangsung</p>
-            <p id="stat-ongoing" class="text-2xl font-bold mt-1">0</p>
+        <%# Card 5 — Berlangsung %>
+        <div class="card" style="padding:1.25rem; min-height:110px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <p style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;" class="text-muted-foreground">Berlangsung</p>
+            <div class="size-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
           </div>
-          <div class="size-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-            </svg>
-          </div>
+          <p id="stat-ongoing" style="font-size:28px; font-weight:600; margin-top:8px; line-height:1; font-variant-numeric:tabular-nums;">0</p>
         </div>
+
       </div>
 
-      <!-- Charts & Visualisation Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Pie Chart (Status Distribution) -->
-        <div class="card p-5 lg:col-span-1 flex flex-col justify-between min-h-[320px]">
-          <div>
-            <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Status Progress</h3>
+      <%# ── Charts row ─────────────────────────────────────────────────────── %>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        <%# Donut chart — pure SVG, no library %>
+        <div class="card p-5 flex flex-col gap-4">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status Progress</h3>
+
+          <%# SVG donut: center (50,50), r=40, circumference ≈ 251.33 %>
+          <div class="flex items-center justify-center">
+            <svg id="donut-svg" viewBox="0 0 100 100" width="180" height="180" aria-label="Donut chart status progress">
+              <%# Track (background) %>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="var(--muted)" stroke-width="14"/>
+              <%# Segment: Selesai (hijau) %>
+              <circle id="donut-done"
+                cx="50" cy="50" r="40" fill="none"
+                stroke="#16a34a" stroke-width="14"
+                stroke-dasharray="0 251.33"
+                stroke-linecap="butt"
+                transform="rotate(-90 50 50)"/>
+              <%# Segment: Berlangsung (orange) %>
+              <circle id="donut-ongoing"
+                cx="50" cy="50" r="40" fill="none"
+                stroke="#ea580c" stroke-width="14"
+                stroke-dasharray="0 251.33"
+                stroke-linecap="butt"
+                transform="rotate(-90 50 50)"/>
+              <%# Label tengah %>
+              <text id="donut-pct" x="50" y="46" text-anchor="middle" dominant-baseline="middle"
+                    font-size="18" font-weight="700" fill="currentColor">0%</text>
+              <text x="50" y="60" text-anchor="middle" font-size="7"
+                    fill="#6b7280">Selesai</text>
+            </svg>
           </div>
-          <div class="flex-1 flex items-center justify-center relative">
-            <canvas id="pieChart" class="max-h-[220px] max-w-[220px]"></canvas>
-            <div id="pie-fallback" class="hidden text-xs text-muted-foreground italic text-center">Grafik tidak tersedia.</div>
+
+          <%# Legend %>
+          <div class="space-y-2 mt-auto">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="size-3 rounded-sm shrink-0" style="background:#16a34a"></span>
+                <span class="text-muted-foreground">Selesai</span>
+              </div>
+              <span id="donut-label-done" class="font-semibold tabular-nums">0</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="size-3 rounded-sm shrink-0" style="background:#ea580c"></span>
+                <span class="text-muted-foreground">Berlangsung</span>
+              </div>
+              <span id="donut-label-ongoing" class="font-semibold tabular-nums">0</span>
+            </div>
+          </div>
+
+          <%# Fallback jika tidak ada data %>
+          <div id="donut-fallback" class="hidden text-xs text-muted-foreground italic text-center py-4">
+            Belum ada data progress.
           </div>
         </div>
 
-        <!-- Bar Chart (Committee Task & Progress) -->
-        <div class="card p-5 lg:col-span-2 flex flex-col justify-between min-h-[320px]">
-          <div>
-            <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Statistik Per Proyek/Kepanitiaan</h3>
+        <%# Bar chart — pure CSS/flexbox, rendered by JS %>
+        <div class="card p-5 lg:col-span-2 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statistik Per Kepanitiaan</h3>
+            <%# Legend %>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span class="size-2.5 rounded-sm" style="background:#2563eb"></span> Task
+              </div>
+              <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span class="size-2.5 rounded-sm" style="background:#15803d"></span> Progress
+              </div>
+            </div>
           </div>
-          <div class="flex-1 flex items-center justify-center relative">
-            <canvas id="barChart" class="w-full max-h-[220px]"></canvas>
-            <div id="bar-fallback" class="hidden text-xs text-muted-foreground italic text-center">Grafik tidak tersedia.</div>
+
+          <%# Container bar chart — diisi oleh JS %>
+          <div id="bar-chart-inner" class="flex-1 min-h-[220px] flex items-end">
+            <div class="flex items-center justify-center w-full text-xs text-muted-foreground italic">
+              Memuat data...
+            </div>
           </div>
         </div>
+
       </div>
 
-      <!-- Summary Table Card -->
-      <div class="card overflow-hidden relative min-h-[250px]" id="table-card">
-        <!-- Loading overlay -->
-        <div id="table-loader" class="absolute inset-0 bg-background/50 z-20 flex items-center justify-center hidden">
+      <%# ── Summary table ──────────────────────────────────────────────────── %>
+      <div class="card overflow-hidden relative min-h-[200px]" id="table-card">
+
+        <%# Loading overlay %>
+        <div id="table-loader" class="absolute inset-0 bg-background/60 z-20 flex items-center justify-center hidden">
           <div class="flex flex-col items-center gap-2">
-            <svg class="animate-spin size-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg class="animate-spin size-7 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
             </svg>
-            <span class="text-xs text-muted-foreground font-medium">Memuat data dashboard...</span>
+            <span class="text-xs text-muted-foreground">Memuat data...</span>
           </div>
         </div>
 
-        <!-- Empty State Container -->
-        <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div class="size-16 rounded-full bg-muted flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
+        <%# Empty state %>
+        <div id="empty-state" class="hidden flex flex-col items-center justify-center py-16 text-center gap-3">
+          <div class="size-14 rounded-full bg-muted flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
               <path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
             </svg>
           </div>
-          <div class="space-y-1">
-            <p class="font-semibold text-base">Belum ada data project.</p>
-            <p class="text-xs text-muted-foreground">Tidak ada kepanitiaan atau data task yang cocok dengan filter aktif.</p>
+          <p class="font-semibold text-sm">Belum ada data.</p>
+          <p class="text-xs text-muted-foreground">Tidak ada kepanitiaan yang cocok dengan filter aktif.</p>
+        </div>
+
+        <%# Table %>
+        <div id="table-container">
+          <div class="px-5 py-4 border-b">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ringkasan Kepanitiaan</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-muted/40 border-b">
+                <tr>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground w-10">#</th>
+                  <th class="text-left px-4 py-3 font-medium text-muted-foreground">Nama Kepanitiaan</th>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground w-32">Jumlah Task</th>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground w-32">Jumlah Progress</th>
+                  <th class="text-center px-4 py-3 font-medium text-muted-foreground w-28">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="summary-table-body" class="divide-y"></tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Table Container -->
-        <div id="table-container" class="overflow-x-auto w-full">
-          <div class="px-5 py-4 border-b">
-            <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Ringkasan Proyek & Kegiatan</h3>
-          </div>
-          <table class="w-full text-sm">
-            <thead class="bg-muted/40 border-b">
-              <tr>
-                <th class="text-center px-4 py-3 font-medium text-muted-foreground w-12">#</th>
-                <th class="text-left px-4 py-3 font-medium text-muted-foreground">Nama Kepanitiaan / Proyek</th>
-                <th class="text-center px-4 py-3 font-medium text-muted-foreground w-36">Jumlah Task</th>
-                <th class="text-center px-4 py-3 font-medium text-muted-foreground w-36">Jumlah Progress</th>
-              </tr>
-            </thead>
-            <tbody id="summary-table-body" class="divide-y">
-              <!-- Rendered dynamically -->
-            </tbody>
-          </table>
-        </div>
       </div>
 
     </div>
   </div>
 
-  <!-- Load Chart.js from CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" onerror="window.chartJsLoadError = true;"></script>
-
+  <%# ── Dashboard JS ────────────────────────────────────────────────────────── %>
   <script>
     (() => {
-      const filterForm = document.getElementById('filter-form');
-      const tableBody = document.getElementById('summary-table-body');
-      const tableLoader = document.getElementById('table-loader');
-      const emptyState = document.getElementById('empty-state');
-      const tableContainer = document.getElementById('table-container');
-      const errorContainer = document.getElementById('error-container');
-      const errorMessage = document.getElementById('error-message');
+      // ── DOM refs ────────────────────────────────────────────────────────────
+      const filterForm      = document.getElementById('filter-form');
+      const tableBody       = document.getElementById('summary-table-body');
+      const tableLoader     = document.getElementById('table-loader');
+      const emptyState      = document.getElementById('empty-state');
+      const tableContainer  = document.getElementById('table-container');
+      const errorContainer  = document.getElementById('error-container');
+      const errorMessage    = document.getElementById('error-message');
 
       const statProjects = document.getElementById('stat-projects');
-      const statTasks = document.getElementById('stat-tasks');
+      const statTasks    = document.getElementById('stat-tasks');
       const statProgress = document.getElementById('stat-progress');
-      const statDone = document.getElementById('stat-done');
-      const statOngoing = document.getElementById('stat-ongoing');
+      const statDone     = document.getElementById('stat-done');
+      const statOngoing  = document.getElementById('stat-ongoing');
 
-      let pieChartInstance = null;
-      let barChartInstance = null;
+      // ── Utilities ───────────────────────────────────────────────────────────
+      const setLoader  = (v) => tableLoader.classList.toggle('hidden', !v);
+      const showError  = (msg) => { errorMessage.textContent = msg; errorContainer.classList.remove('hidden'); };
+      const hideError  = ()    => errorContainer.classList.add('hidden');
+      const resetStats = ()    => [statProjects, statTasks, statProgress, statDone, statOngoing].forEach(el => el.textContent = '0');
 
-      // Handle loader toggle
-      const setLoader = (visible) => {
-        if (visible) {
-          tableLoader.classList.remove('hidden');
-        } else {
-          tableLoader.classList.add('hidden');
-        }
-      };
+      // ── SVG Donut chart ─────────────────────────────────────────────────────
+      // Circumference = 2π × r = 2π × 40 ≈ 251.33
+      const C = 2 * Math.PI * 40;
 
-      // Handle error alert display
-      const showError = (msg) => {
-        errorMessage.textContent = msg;
-        errorContainer.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      };
+      function renderDonut(done, ongoing) {
+        const total      = done + ongoing;
+        const doneDash   = total > 0 ? (done   / total) * C : 0;
+        const ongoDash   = total > 0 ? (ongoing / total) * C : 0;
 
-      const hideError = () => {
-        errorContainer.classList.add('hidden');
-      };
+        const elDone     = document.getElementById('donut-done');
+        const elOngoing  = document.getElementById('donut-ongoing');
+        const elPct      = document.getElementById('donut-pct');
+        const elLblDone  = document.getElementById('donut-label-done');
+        const elLblOngo  = document.getElementById('donut-label-ongoing');
+        const elFallback = document.getElementById('donut-fallback');
+        const elSvg      = document.getElementById('donut-svg');
 
-      // Reset statistics UI to 0
-      const resetStats = () => {
-        statProjects.textContent = '0';
-        statTasks.textContent = '0';
-        statProgress.textContent = '0';
-        statDone.textContent = '0';
-        statOngoing.textContent = '0';
-      };
-
-      // Render charts dynamically (A1 and E9 exception handlers included)
-      const renderCharts = (stats, summary) => {
-        // Fallback check if script failed to load (A1)
-        if (window.chartJsLoadError || typeof Chart === 'undefined') {
-          console.warn('[Dashboard] Chart.js was not loaded. Displaying without charts.');
-          document.getElementById('pie-fallback').classList.remove('hidden');
-          document.getElementById('bar-fallback').classList.remove('hidden');
+        if (total === 0) {
+          // Tampilkan grey track + fallback text
+          elDone.setAttribute('stroke-dasharray', `0 ${C}`);
+          elOngoing.setAttribute('stroke-dasharray', `0 ${C}`);
+          elPct.textContent = '0%';
+          elLblDone.textContent  = '0';
+          elLblOngo.textContent  = '0';
+          elFallback.classList.remove('hidden');
+          elSvg.style.opacity = '0.4';
           return;
         }
 
-        try {
-          const isDark = document.documentElement.classList.contains('dark');
-          const gridColor = isDark ? '#334155' : '#cbd5e1';
-          const textColor = isDark ? '#94a3b8' : '#475569';
+        elFallback.classList.add('hidden');
+        elSvg.style.opacity = '1';
 
-          // --- 1. PIE CHART ---
-          const pieCtx = document.getElementById('pieChart').getContext('2d');
-          if (pieChartInstance) {
-            pieChartInstance.destroy();
-          }
+        // Segment 1 (selesai/hijau): mulai dari posisi 0
+        elDone.setAttribute('stroke-dasharray', `${doneDash} ${C - doneDash}`);
+        elDone.setAttribute('stroke-dashoffset', '0');
 
-          const hasData = stats.progress_done > 0 || stats.progress_ongoing > 0;
-          if (!hasData) {
-            document.getElementById('pie-fallback').classList.remove('hidden');
-            document.getElementById('pieChart').style.display = 'none';
-          } else {
-            document.getElementById('pie-fallback').classList.add('hidden');
-            document.getElementById('pieChart').style.display = 'block';
+        // Segment 2 (berlangsung/orange): mulai setelah segment 1
+        // Formula: dashoffset = C - startPosition = C - doneDash
+        elOngoing.setAttribute('stroke-dasharray', `${ongoDash} ${C - ongoDash}`);
+        elOngoing.setAttribute('stroke-dashoffset', C - doneDash);
 
-            pieChartInstance = new Chart(pieCtx, {
-              type: 'doughnut',
-              data: {
-                labels: ['Selesai', 'Sedang Berlangsung'],
-                datasets: [{
-                  data: [stats.progress_done, stats.progress_ongoing],
-                  backgroundColor: ['#10b981', '#f97316'],
-                  borderColor: isDark ? '#1e293b' : '#ffffff',
-                  borderWidth: 2
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'bottom',
-                    labels: { color: textColor, font: { size: 10 } }
-                  }
-                }
-              }
-            });
-          }
+        elPct.textContent      = Math.round((done / total) * 100) + '%';
+        elLblDone.textContent  = done;
+        elLblOngo.textContent  = ongoing;
+      }
 
-          // --- 2. BAR CHART ---
-          const barCtx = document.getElementById('barChart').getContext('2d');
-          if (barChartInstance) {
-            barChartInstance.destroy();
-          }
+      // ── CSS Bar chart ────────────────────────────────────────────────────────
+      const CHART_H  = 180; // tinggi area bar dalam px
+      const Y_STEPS  = 4;   // jumlah garis horizontal
 
-          if (summary.length === 0) {
-            document.getElementById('bar-fallback').classList.remove('hidden');
-            document.getElementById('barChart').style.display = 'none';
-          } else {
-            document.getElementById('bar-fallback').classList.add('hidden');
-            document.getElementById('barChart').style.display = 'block';
+      function renderBarChart(summary) {
+        const container = document.getElementById('bar-chart-inner');
+        if (!container) return;
 
-            const labels = summary.map(item => item.name);
-            const taskCounts = summary.map(item => item.total_task);
-            const progressCounts = summary.map(item => item.total_progress);
-
-            barChartInstance = new Chart(barCtx, {
-              type: 'bar',
-              data: {
-                labels,
-                datasets: [
-                  {
-                    label: 'Jumlah Task',
-                    data: taskCounts,
-                    backgroundColor: '#6366f1'
-                  },
-                  {
-                    label: 'Jumlah Progress',
-                    data: progressCounts,
-                    backgroundColor: '#8b5cf6'
-                  }
-                ]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'top',
-                    labels: { color: textColor, font: { size: 10 } }
-                  }
-                },
-                scales: {
-                  x: {
-                    ticks: { color: textColor, font: { size: 9 } },
-                    grid: { display: false }
-                  },
-                  y: {
-                    ticks: { color: textColor, font: { size: 9 }, stepSize: 1 },
-                    grid: { color: gridColor }
-                  }
-                }
-              }
-            });
-          }
-
-        } catch (chartErr) {
-          console.error('[Dashboard] Error rendering Chart.js charts:', chartErr);
-          // E9 fallback: hide canvas show warning
-          document.getElementById('pie-fallback').classList.remove('hidden');
-          document.getElementById('bar-fallback').classList.remove('hidden');
-        }
-      };
-
-      // Fetch dashboard JSON reports
-      const fetchDashboardData = async () => {
-        setLoader(true);
-        hideError();
-
-        const formData = new FormData(filterForm);
-        const queryParams = new URLSearchParams();
-        queryParams.append('json', '1');
-
-        for (const [key, value] of formData.entries()) {
-          if (value) queryParams.append(key, value);
+        if (!summary.length) {
+          container.innerHTML = '<div class="flex items-center justify-center w-full text-xs text-muted-foreground italic">Tidak ada data.</div>';
+          return;
         }
 
-        try {
-          const response = await fetch(`/dashboard?${queryParams.toString()}`);
+        const maxVal = Math.max(1, ...summary.map(d => Math.max(d.total_task, d.total_progress)));
 
-          if (!response.ok) {
-            if (response.status === 400) {
-              showError('Filter dashboard tidak valid.');
-            } else if (response.status === 401 || response.status === 403) {
-              window.location.href = '/login'; // E5 Unauthorized
-            } else if (response.status === 504) {
-              showError('Permintaan melebihi batas waktu.');
-            } else {
-              showError('Terjadi kesalahan saat mengambil data dashboard.');
-            }
-            resetStats();
-            renderTable([]);
-            renderCharts({ progress_done: 0, progress_ongoing: 0 }, []);
-            return;
-          }
+        // Y-axis labels (dari atas ke bawah)
+        const yLabels = Array.from({ length: Y_STEPS + 1 }, (_, i) =>
+          Math.round(maxVal * (Y_STEPS - i) / Y_STEPS)
+        );
 
-          const result = await response.json();
-          // E8 response check
-          if (!result || typeof result.success === 'undefined' || !result.data) {
-            showError('Format data dashboard tidak valid.');
-            resetStats();
-            renderTable([]);
-            renderCharts({ progress_done: 0, progress_ongoing: 0 }, []);
-            return;
-          }
+        // Render tiap kelompok bar
+        const barsHTML = summary.map(item => {
+          const taskH = Math.max(3, (item.total_task     / maxVal) * CHART_H);
+          const progH = Math.max(3, (item.total_progress / maxVal) * CHART_H);
+          const lbl   = item.name.length > 14 ? item.name.slice(0, 13) + '…' : item.name;
 
-          const { stats, summary } = result.data;
+          // Pattern diagonal untuk aksesibilitas (task = garis 45°, progress = garis -45°)
+          return `
+            <div class="flex flex-col items-center gap-1 flex-1 min-w-0 max-w-[72px]">
+              <div class="flex items-end gap-0.5" style="height:${CHART_H}px">
+                <%# Bar: Task (biru) %>
+                <div class="flex flex-col items-center justify-end gap-0.5" style="height:${CHART_H}px">
+                  <span class="text-[9px] font-bold leading-none" style="color:#2563eb">${item.total_task}</span>
+                  <div style="
+                    height:${taskH}px; width:16px;
+                    background:#2563eb;
+                    border-radius:3px 3px 0 0;
+                    background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.18) 3px,rgba(255,255,255,.18) 4px);
+                  "></div>
+                </div>
+                <%# Bar: Progress (hijau tua) %>
+                <div class="flex flex-col items-center justify-end gap-0.5" style="height:${CHART_H}px">
+                  <span class="text-[9px] font-bold leading-none" style="color:#15803d">${item.total_progress}</span>
+                  <div style="
+                    height:${progH}px; width:16px;
+                    background:#15803d;
+                    border-radius:3px 3px 0 0;
+                    background-image:repeating-linear-gradient(-45deg,transparent,transparent 3px,rgba(255,255,255,.18) 3px,rgba(255,255,255,.18) 4px);
+                  "></div>
+                </div>
+              </div>
+              <span class="text-[9px] text-muted-foreground text-center w-full truncate" title="${item.name}">${lbl}</span>
+            </div>
+          `;
+        }).join('');
 
-          // Update Card Metrics
-          statProjects.textContent = stats.total_project;
-          statTasks.textContent = stats.total_task;
-          statProgress.textContent = stats.total_progress;
-          statDone.textContent = stats.progress_done;
-          statOngoing.textContent = stats.progress_ongoing;
+        // Garis grid horizontal
+        const gridLines = yLabels.map(() =>
+          `<div class="border-t border-dashed border-muted-foreground/20 w-full"></div>`
+        ).join('');
 
-          // Render Elements
-          renderTable(summary);
-          renderCharts(stats, summary);
+        container.innerHTML = `
+          <div class="flex gap-3 w-full">
+            <%# Y-axis %>
+            <div class="flex flex-col justify-between items-end shrink-0 pb-5 pt-1" style="height:${CHART_H + 24}px">
+              ${yLabels.map(v => `<span class="text-[9px] text-muted-foreground leading-none">${v}</span>`).join('')}
+            </div>
+            <%# Plot area %>
+            <div class="flex-1 relative min-w-0">
+              <%# Grid lines (absolute, di belakang bars) %>
+              <div class="absolute inset-0 pb-5 flex flex-col justify-between pointer-events-none" aria-hidden="true">
+                ${gridLines}
+              </div>
+              <%# Bars container — scrollable jika banyak kepanitiaan %>
+              <div class="relative flex items-end gap-1 border-b overflow-x-auto pb-5 min-w-0"
+                   style="height:${CHART_H + 24}px; padding-top:4px;">
+                ${barsHTML}
+              </div>
+            </div>
+          </div>
+        `;
+      }
 
-        } catch (err) {
-          console.error('[fetchDashboardData error]:', err);
-          showError('Gagal terhubung ke database.');
-          resetStats();
-          renderTable([]);
-          renderCharts({ progress_done: 0, progress_ongoing: 0 }, []);
-        } finally {
-          setLoader(false);
-        }
-      };
-
-      // Render summary data rows
-      const renderTable = (data) => {
+      // ── Summary table ────────────────────────────────────────────────────────
+      function renderTable(data) {
         tableBody.innerHTML = '';
 
-        if (data.length === 0) {
+        if (!data.length) {
           emptyState.classList.remove('hidden');
           tableContainer.classList.add('hidden');
           return;
@@ -483,43 +457,107 @@
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-muted/30 transition-colors';
 
+          // Badge "Belum ada data" jika task = 0
+          const taskCell = row.total_task === 0
+            ? `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">Belum ada task</span>`
+            : `<span class="font-semibold text-indigo-600 dark:text-indigo-400">${row.total_task}</span>`;
+
           tr.innerHTML = `
             <td class="px-4 py-3 text-muted-foreground text-xs text-center">${i + 1}</td>
-            <td class="px-4 py-3"><span class="font-medium block truncate max-w-[300px]">${row.name}</span></td>
-            <td class="px-4 py-3 text-center font-semibold text-indigo-600 dark:text-indigo-400">${row.total_task}</td>
+            <td class="px-4 py-3 font-medium truncate max-w-[260px]">${row.name}</td>
+            <td class="px-4 py-3 text-center">${taskCell}</td>
             <td class="px-4 py-3 text-center font-semibold text-violet-600 dark:text-violet-400">${row.total_progress}</td>
+            <td class="px-4 py-3 text-center">
+              <a href="/committees/${row.id}"
+                 hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML"
+                 class="btn-outline text-xs px-2.5 py-1 h-7 inline-flex items-center gap-1 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                Lihat Detail
+              </a>
+            </td>
           `;
 
           tableBody.appendChild(tr);
         });
-      };
+      }
 
-      // Trigger automatic update on changes
+      // ── Fetch & update semua elemen ──────────────────────────────────────────
+      async function fetchDashboardData() {
+        setLoader(true);
+        hideError();
+
+        const formData    = new FormData(filterForm);
+        const queryParams = new URLSearchParams({ json: '1' });
+        for (const [k, v] of formData.entries()) {
+          if (v) queryParams.append(k, v);
+        }
+
+        try {
+          const res = await fetch(`/dashboard?${queryParams}`);
+
+          if (!res.ok) {
+            const status = res.status;
+            if (status === 400)               showError('Filter tidak valid.');
+            else if (status === 401 || status === 403) window.location.href = '/login';
+            else if (status === 504)          showError('Permintaan melebihi batas waktu.');
+            else                              showError('Terjadi kesalahan saat memuat data.');
+            resetStats();
+            renderDonut(0, 0);
+            renderBarChart([]);
+            renderTable([]);
+            return;
+          }
+
+          const result = await res.json();
+          if (!result?.success || !result?.data) {
+            showError('Format data tidak valid.');
+            resetStats();
+            renderDonut(0, 0);
+            renderBarChart([]);
+            renderTable([]);
+            return;
+          }
+
+          const { stats, summary } = result.data;
+
+          statProjects.textContent = stats.total_project;
+          statTasks.textContent    = stats.total_task;
+          statProgress.textContent = stats.total_progress;
+          statDone.textContent     = stats.progress_done;
+          statOngoing.textContent  = stats.progress_ongoing;
+
+          renderDonut(stats.progress_done, stats.progress_ongoing);
+          renderBarChart(summary);
+          renderTable(summary);
+
+        } catch (err) {
+          console.error('[Dashboard fetch error]:', err);
+          showError('Gagal terhubung ke server.');
+          resetStats();
+          renderDonut(0, 0);
+          renderBarChart([]);
+          renderTable([]);
+        } finally {
+          setLoader(false);
+        }
+      }
+
+      // ── Event listeners ──────────────────────────────────────────────────────
       filterForm.addEventListener('change', fetchDashboardData);
 
-      // Handle filters reset
       document.getElementById('reset-filters-btn').addEventListener('click', () => {
         filterForm.reset();
         fetchDashboardData();
       });
 
-      // Handle dark/light theme switch updates for Chart color updates
-      document.addEventListener('basecoat:theme', () => {
-        // Delay slightly for documentElement class changes to settle
-        setTimeout(() => {
-          if (pieChartInstance || barChartInstance) {
-            // Re-render using last stats/summary values is cleanest,
-            // but fetching again is extremely fast and syncs state
-            fetchDashboardData();
-          }
-        }, 100);
-      });
+      // Re-fetch saat tema berubah agar warna SVG ikut update
+      document.addEventListener('basecoat:theme', () => setTimeout(fetchDashboardData, 100));
 
-      // Initial Fetch
+      // Initial load
       fetchDashboardData();
-
     })();
   </script>
+
 </main>
 
 <%- include('../partials/_scripts') %>
