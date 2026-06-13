@@ -227,8 +227,8 @@
           </div>
 
           <%# Container bar chart — diisi oleh JS %>
-          <div id="bar-chart-inner" class="flex-1 min-h-[220px] flex items-end">
-            <div class="flex items-center justify-center w-full text-xs text-muted-foreground italic">
+          <div id="bar-chart-inner" class="flex-1 min-h-[220px]">
+            <div class="flex items-center justify-center w-full h-full min-h-[220px] text-xs text-muted-foreground italic">
               Memuat data...
             </div>
           </div>
@@ -358,86 +358,82 @@
       }
 
       // ── CSS Bar chart ────────────────────────────────────────────────────────
-      const CHART_H  = 180; // tinggi area bar dalam px
-      const Y_STEPS  = 4;   // jumlah garis horizontal
+      const BAR_H    = 140; // max bar height px (area murni, tidak termasuk angka di atas)
+      const VALUES_H = 16;  // baris reserved di atas bar untuk value numbers
+      const Y_STEPS  = 4;   // jumlah gridline horizontal
 
       function renderBarChart(summary) {
         const container = document.getElementById('bar-chart-inner');
         if (!container) return;
 
         if (!summary.length) {
-          container.innerHTML = '<div class="flex items-center justify-center w-full text-xs text-muted-foreground italic">Tidak ada data.</div>';
+          container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:120px;font-size:12px;color:#6b7280;font-style:italic;">Tidak ada data.</div>`;
           return;
         }
 
         const maxVal = Math.max(1, ...summary.map(d => Math.max(d.total_task, d.total_progress)));
 
-        // Y-axis labels (dari atas ke bawah)
+        // Y-axis labels: dari atas (maxVal) ke bawah (0)
         const yLabels = Array.from({ length: Y_STEPS + 1 }, (_, i) =>
           Math.round(maxVal * (Y_STEPS - i) / Y_STEPS)
         );
 
-        // Render tiap kelompok bar
-        const barsHTML = summary.map(item => {
-          const taskH = Math.max(3, (item.total_task     / maxVal) * CHART_H);
-          const progH = Math.max(3, (item.total_progress / maxVal) * CHART_H);
-          const lbl   = item.name.length > 14 ? item.name.slice(0, 13) + '…' : item.name;
+        // Tinggi bar: 2px (faded) untuk nilai 0, proporsional untuk nilai > 0
+        const calcH = (val) => val === 0 ? 2 : Math.max(4, Math.round((val / maxVal) * BAR_H));
 
-          // Pattern diagonal untuk aksesibilitas (task = garis 45°, progress = garis -45°)
-          return `
-            <div class="flex flex-col items-center gap-1 flex-1 min-w-0 max-w-[72px]">
-              <div class="flex items-end gap-0.5" style="height:${CHART_H}px">
-                <%# Bar: Task (biru) %>
-                <div class="flex flex-col items-center justify-end gap-0.5" style="height:${CHART_H}px">
-                  <span class="text-[9px] font-bold leading-none" style="color:#2563eb">${item.total_task}</span>
-                  <div style="
-                    height:${taskH}px; width:16px;
-                    background:#2563eb;
-                    border-radius:3px 3px 0 0;
-                    background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.18) 3px,rgba(255,255,255,.18) 4px);
-                  "></div>
-                </div>
-                <%# Bar: Progress (hijau tua) %>
-                <div class="flex flex-col items-center justify-end gap-0.5" style="height:${CHART_H}px">
-                  <span class="text-[9px] font-bold leading-none" style="color:#15803d">${item.total_progress}</span>
-                  <div style="
-                    height:${progH}px; width:16px;
-                    background:#15803d;
-                    border-radius:3px 3px 0 0;
-                    background-image:repeating-linear-gradient(-45deg,transparent,transparent 3px,rgba(255,255,255,.18) 3px,rgba(255,255,255,.18) 4px);
-                  "></div>
-                </div>
-              </div>
-              <span class="text-[9px] text-muted-foreground text-center w-full truncate" title="${item.name}">${lbl}</span>
-            </div>
-          `;
+        const barsHTML = summary.map(item => {
+          const taskH  = calcH(item.total_task);
+          const progH  = calcH(item.total_progress);
+          const taskOp = item.total_task     === 0 ? '0.3' : '1';
+          const progOp = item.total_progress === 0 ? '0.3' : '1';
+          const safeName = item.name.replace(/"/g, '&quot;');
+
+          return `<div style="display:flex;flex-direction:column;align-items:center;min-width:100px;flex-shrink:0;padding:0 6px;">
+  <%# Baris angka: terpisah dari bar agar bar tertinggi tidak mepet atas %>
+  <div style="display:flex;gap:4px;justify-content:center;align-items:flex-end;height:${VALUES_H}px;">
+    <span style="width:16px;text-align:center;font-size:9px;font-weight:700;color:#2563eb;line-height:1;">${item.total_task}</span>
+    <span style="width:16px;text-align:center;font-size:9px;font-weight:700;color:#15803d;line-height:1;">${item.total_progress}</span>
+  </div>
+  <%# Baris bar: border-bottom = garis sumbu X %>
+  <div style="display:flex;gap:4px;align-items:flex-end;height:${BAR_H}px;border-bottom:1.5px solid rgba(107,114,128,.3);">
+    <div style="height:${taskH}px;width:16px;background:#2563eb;border-radius:3px 3px 0 0;opacity:${taskOp};background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.18) 3px,rgba(255,255,255,.18) 4px);"></div>
+    <div style="height:${progH}px;width:16px;background:#15803d;border-radius:3px 3px 0 0;opacity:${progOp};background-image:repeating-linear-gradient(-45deg,transparent,transparent 3px,rgba(255,255,255,.18) 3px,rgba(255,255,255,.18) 4px);"></div>
+  </div>
+  <%# Label sumbu X: word-wrap, tidak dipotong %>
+  <div style="padding-top:6px;width:100%;">
+    <span title="${safeName}" style="display:block;font-size:9px;line-height:1.35;text-align:center;word-break:break-word;white-space:normal;color:#6b7280;">${item.name}</span>
+  </div>
+</div>`;
         }).join('');
 
-        // Garis grid horizontal
+        // Grid lines (hanya sebagai divider, di-render absolut di luar area scroll)
         const gridLines = yLabels.map(() =>
-          `<div class="border-t border-dashed border-muted-foreground/20 w-full"></div>`
+          `<div style="border-top:1px dashed rgba(107,114,128,.2);width:100%;"></div>`
         ).join('');
 
+        // Y-axis total height: VALUES_H + BAR_H — labels align dengan baris bar saja
+        const yAxisH = VALUES_H + BAR_H;
+
         container.innerHTML = `
-          <div class="flex gap-3 w-full">
-            <%# Y-axis %>
-            <div class="flex flex-col justify-between items-end shrink-0 pb-5 pt-1" style="height:${CHART_H + 24}px">
-              ${yLabels.map(v => `<span class="text-[9px] text-muted-foreground leading-none">${v}</span>`).join('')}
-            </div>
-            <%# Plot area %>
-            <div class="flex-1 relative min-w-0">
-              <%# Grid lines (absolute, di belakang bars) %>
-              <div class="absolute inset-0 pb-5 flex flex-col justify-between pointer-events-none" aria-hidden="true">
-                ${gridLines}
-              </div>
-              <%# Bars container — scrollable jika banyak kepanitiaan %>
-              <div class="relative flex items-end gap-1 border-b overflow-x-auto pb-5 min-w-0"
-                   style="height:${CHART_H + 24}px; padding-top:4px;">
-                ${barsHTML}
-              </div>
-            </div>
-          </div>
-        `;
+<div style="display:flex;gap:8px;width:100%;min-width:0;">
+  <%# Y-axis: mulai dari VALUES_H px agar label top sejajar dengan puncak bar %>
+  <div style="display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;flex-shrink:0;height:${yAxisH}px;padding-top:${VALUES_H}px;">
+    ${yLabels.map(v => `<span style="font-size:9px;color:#6b7280;line-height:1;">${v}</span>`).join('')}
+  </div>
+  <%# Plot area %>
+  <div style="flex:1;position:relative;min-width:0;">
+    <%# Grid lines — absolut, tidak ikut scroll horizontal %>
+    <div style="position:absolute;top:${VALUES_H}px;left:0;right:0;height:${BAR_H}px;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;" aria-hidden="true">
+      ${gridLines}
+    </div>
+    <%# Bars — scrollable horizontal jika banyak kepanitiaan %>
+    <div style="overflow-x:auto;scrollbar-width:thin;">
+      <div style="display:flex;flex-wrap:nowrap;min-width:min-content;position:relative;z-index:1;">
+        ${barsHTML}
+      </div>
+    </div>
+  </div>
+</div>`;
       }
 
       // ── Summary table ────────────────────────────────────────────────────────
