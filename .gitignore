@@ -66,3 +66,22 @@ typings/
 .next
 
 public/uploads/
+
+# Playwright E2E Testing
+playwright-report/
+test-results/
+tests/.auth/
+.env.test
+.env.*.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+.idea/
+
+# Playwright browser cache
+/ms-playwright/

@@ -121,7 +121,7 @@
       let total = 0;
       document.querySelectorAll('.item-row').forEach(row => {
         const qty   = parseFloat(row.querySelector('.item-qty').value)   || 0;
-        const price = parseFloat((row.querySelector('.item-price').value || '').replace(/[^0-9.]/g, '')) || 0;
+        const price = parseFloat((row.querySelector('.item-price').value || '').replace(/[^0-9]/g, '')) || 0;
         const t     = qty * price;
         row.querySelector('.item-total').textContent = 'Rp ' + formatRp(t);
         row.querySelector('.item-price-hidden').value = price;
