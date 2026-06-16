@@ -57,13 +57,24 @@
       </div>
 
       <!-- Filters Panel -->
-      <div class="card p-5">
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Filter Laporan</h2>
-        <form id="filter-form" class="flex flex-row flex-wrap items-end gap-4">
+      <div class="card px-4 py-3">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Filter Laporan</h2>
+          <button type="button" id="reset-filters-btn"
+            class="btn-ghost text-xs text-muted-foreground hover:bg-muted gap-1.5 h-7 px-2 rounded-md flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Reset Filter
+          </button>
+        </div>
+        <form id="filter-form" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <!-- Committee -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+          <div class="space-y-1">
             <label for="filter-committee" class="text-xs font-medium text-muted-foreground">Kepanitiaan</label>
-            <select id="filter-committee" name="committee" class="select w-full text-xs">
+            <select id="filter-committee" name="committee" class="select w-full text-xs h-8">
               <option value="">Semua Kepanitiaan</option>
               <% committees.forEach(function(c) { %>
                 <option value="<%= c.id %>"><%= c.name %></option>
@@ -72,9 +83,9 @@
           </div>
 
           <!-- Task -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+          <div class="space-y-1">
             <label for="filter-task" class="text-xs font-medium text-muted-foreground">Task Project</label>
-            <select id="filter-task" name="task" class="select w-full text-xs">
+            <select id="filter-task" name="task" class="select w-full text-xs h-8">
               <option value="">Semua Task</option>
               <% tasks.forEach(function(t) { %>
                 <option value="<%= t.id %>"><%= t.title %></option>
@@ -83,9 +94,9 @@
           </div>
 
           <!-- Status -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+          <div class="space-y-1">
             <label for="filter-status" class="text-xs font-medium text-muted-foreground">Status</label>
-            <select id="filter-status" name="status" class="select w-full text-xs">
+            <select id="filter-status" name="status" class="select w-full text-xs h-8">
               <option value="">Semua Status</option>
               <option value="in_progress">Sedang Berlangsung</option>
               <option value="done">Selesai</option>
@@ -93,26 +104,17 @@
           </div>
 
           <!-- Start Date -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+          <div class="space-y-1">
             <label for="filter-start-date" class="text-xs font-medium text-muted-foreground">Tanggal Mulai</label>
-            <input type="date" id="filter-start-date" name="start_date" class="input w-full text-xs" />
+            <input type="date" id="filter-start-date" name="start_date" class="input w-full text-xs h-8" />
           </div>
 
           <!-- End Date -->
-          <div class="space-y-1 flex-1 min-w-[150px]">
+          <div class="space-y-1">
             <label for="filter-end-date" class="text-xs font-medium text-muted-foreground">Tanggal Akhir</label>
-            <input type="date" id="filter-end-date" name="end_date" class="input w-full text-xs" />
+            <input type="date" id="filter-end-date" name="end_date" class="input w-full text-xs h-8" />
           </div>
         </form>
-        <div class="flex justify-end mt-4">
-          <button type="button" id="reset-filters-btn" class="btn btn-sm-ghost text-xs text-muted-foreground hover:bg-muted gap-1.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-              <path d="M3 3v5h5"/>
-            </svg>
-            Reset Filter
-          </button>
-        </div>
       </div>
 
       <!-- Dashboard Statistics Row -->
