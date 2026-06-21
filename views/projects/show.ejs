@@ -87,55 +87,50 @@
       <%# ── Hero Banner ── %>
       <%
         const statusColors = {
-          draft:     'background:rgba(161,161,170,0.25); color:#e4e4e7; border-color:rgba(161,161,170,0.3);',
-          active:    'background:rgba(52,211,153,0.25); color:#6ee7b7; border-color:rgba(52,211,153,0.35);',
-          completed: 'background:rgba(96,165,250,0.25); color:#93c5fd; border-color:rgba(96,165,250,0.35);',
-          cancelled: 'background:rgba(248,113,113,0.25); color:#fca5a5; border-color:rgba(248,113,113,0.35);',
+          draft:     'bg-muted text-muted-foreground border-border',
+          active:    'bg-primary/10 text-primary border-primary/20',
+          completed: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400',
+          cancelled: 'bg-destructive/10 text-destructive border-destructive/20',
         };
         const statusLabels = { draft: 'Draft', active: 'Aktif', completed: 'Selesai', cancelled: 'Dibatalkan' };
       %>
-      <div class="shadow-sm overflow-hidden border border-border" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1d4ed8 100%); border-radius: var(--radius-lg);">
-        <div class="p-6 md:p-8" style="position: relative;">
-          <div style="position:absolute; top:-20px; right:-20px; width:160px; height:160px; border-radius:9999px; background: rgba(255,255,255,0.04); pointer-events:none;"></div>
-          <div style="position:absolute; top:20px; right:20px; width:80px; height:80px; border-radius:9999px; background: rgba(255,255,255,0.04); pointer-events:none;"></div>
-
-          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem; margin-bottom:1.25rem; position:relative; z-index:1;">
-            <span style="display:inline-flex; align-items:center; padding: 0.25rem 0.75rem; border-radius:9999px; font-size:0.7rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; border:1px solid; <%= statusColors[project.status] || statusColors.draft %>">
-              <%= statusLabels[project.status] || project.status %>
-            </span>
-            <% if (memberCount > 0) { %>
-            <span style="display:inline-flex; align-items:center; padding: 0.25rem 0.75rem; border-radius:9999px; font-size:0.7rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.85); border:1px solid rgba(255,255,255,0.18);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <%= memberCount %> Anggota
-            </span>
-            <% } %>
-          </div>
-
-          <h2 style="font-size:1.5rem; font-weight:700; color:#fff; margin-bottom:0.5rem; position:relative; z-index:1;"><%= project.name %></h2>
-          <% if (project.description) { %>
-          <p style="color:rgba(255,255,255,0.7); font-size:0.875rem; max-width:600px; position:relative; z-index:1;"><%= project.description %></p>
+      <div class="card p-6 md:p-8">
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border <%= statusColors[project.status] || statusColors.draft %>">
+            <%= statusLabels[project.status] || project.status %>
+          </span>
+          <% if (memberCount > 0) { %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-muted text-muted-foreground border-border">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <%= memberCount %> Anggota
+          </span>
           <% } %>
+        </div>
 
-          <div style="display:flex; flex-wrap:wrap; gap:1.5rem; margin-top:1.5rem; position:relative; z-index:1;">
-            <% if (project.start_date) { %>
-            <div>
-              <p style="font-size:0.7rem; color:rgba(255,255,255,0.5); font-weight:600; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.25rem;">Tanggal Mulai</p>
-              <p style="font-size:0.875rem; color:rgba(255,255,255,0.9); font-weight:500;"><%= new Date(project.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
-            </div>
-            <% } %>
-            <% if (project.end_date) { %>
-            <div>
-              <p style="font-size:0.7rem; color:rgba(255,255,255,0.5); font-weight:600; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.25rem;">Tanggal Selesai</p>
-              <p style="font-size:0.875rem; color:rgba(255,255,255,0.9); font-weight:500;"><%= new Date(project.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
-            </div>
-            <% } %>
-            <% if (project.creator_name) { %>
-            <div>
-              <p style="font-size:0.7rem; color:rgba(255,255,255,0.5); font-weight:600; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.25rem;">Dibuat Oleh</p>
-              <p style="font-size:0.875rem; color:rgba(255,255,255,0.9); font-weight:500;"><%= project.creator_name %></p>
-            </div>
-            <% } %>
+        <h2 class="text-2xl font-bold tracking-tight mb-2"><%= project.name %></h2>
+        <% if (project.description) { %>
+        <p class="text-muted-foreground max-w-3xl mb-6"><%= project.description %></p>
+        <% } %>
+
+        <div class="flex flex-wrap" style="gap: 2rem; margin-top: 1rem;">
+          <% if (project.start_date) { %>
+          <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tanggal Mulai</p>
+            <p class="text-sm font-medium"><%= new Date(project.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
           </div>
+          <% } %>
+          <% if (project.end_date) { %>
+          <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tanggal Selesai</p>
+            <p class="text-sm font-medium"><%= new Date(project.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+          </div>
+          <% } %>
+          <% if (project.creator_name) { %>
+          <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dibuat Oleh</p>
+            <p class="text-sm font-medium"><%= project.creator_name %></p>
+          </div>
+          <% } %>
         </div>
       </div>
 

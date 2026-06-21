@@ -49,6 +49,10 @@ const sessionStore = new MySQLStore({
   }
 });
 
+sessionStore.on('error', function(error) {
+  console.error('[Session Store Error]', error);
+});
+
 app.use(session({
   key: 'session_cookie_name',
   secret: process.env.SESSION_SECRET || 'secret',

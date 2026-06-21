@@ -55,7 +55,10 @@ const login = async (req, res, next) => {
     req.session.userEmail  = user.email;
     req.session.employeeId = empRows.length > 0 ? empRows[0].id : null;
 
-    res.redirect("/projects");
+    req.session.save((err) => {
+      if (err) return next(err);
+      res.redirect("/projects");
+    });
   } catch (err) {
     next(err);
   }

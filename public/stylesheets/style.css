@@ -7,3 +7,15 @@
   field-sizing: initial; /* override Basecoat auto-grow agar resize bekerja normal */
   font-size: 0.875rem;
 }
+
+/* ── Fix Sidebar Layout ── 
+   Karena Tailwind CLI tidak berjalan, class dinamis tidak ter-compile.
+   Kita tambahkan manual padding-left pada #content agar tidak ditutupi sidebar. */
+@media (min-width: 768px) {
+  body:has(#sidebar:not([aria-hidden="true"])) #content {
+    padding-left: 240px;
+  }
+}
+#content {
+  transition: padding-left 0.3s ease;
+}

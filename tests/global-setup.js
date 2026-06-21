@@ -19,14 +19,13 @@ module.exports = async function globalSetup() {
   const DB = process.env.DB_NAME || 'facultyware_test';
   console.log(`\n[global-setup] Menyiapkan database: ${DB}\n`);
 
-  // ── 1. Buat / reset database ───────────────────────────────────────────────
-  await conn.query(`DROP DATABASE IF EXISTS \`${DB}\``);
-  await conn.query(`CREATE DATABASE \`${DB}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+  // ── 1. Buat / pastikan database ada ──────────────────────────────────────────
+  await conn.query(`CREATE DATABASE IF NOT EXISTS \`${DB}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
   await conn.query(`USE \`${DB}\``);
 
   // ── 2. Buat semua tabel ────────────────────────────────────────────────────
   await conn.query(`
-    CREATE TABLE users (
+    CREATE TABLE IF NOT EXISTS users (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       email VARCHAR(255) NOT NULL UNIQUE,
@@ -37,7 +36,7 @@ module.exports = async function globalSetup() {
       updated_at TIMESTAMP NULL DEFAULT NULL
     );
 
-    CREATE TABLE roles (
+    CREATE TABLE IF NOT EXISTS roles (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(100) NOT NULL UNIQUE,
       guard_name VARCHAR(100) NOT NULL DEFAULT 'web',
@@ -45,7 +44,7 @@ module.exports = async function globalSetup() {
       updated_at TIMESTAMP NULL
     );
 
-    CREATE TABLE permissions (
+    CREATE TABLE IF NOT EXISTS permissions (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(100) NOT NULL UNIQUE,
       guard_name VARCHAR(100) NOT NULL DEFAULT 'web',
@@ -53,26 +52,26 @@ module.exports = async function globalSetup() {
       updated_at TIMESTAMP NULL
     );
 
-    CREATE TABLE role_has_permissions (
+    CREATE TABLE IF NOT EXISTS role_has_permissions (
       permission_id INT UNSIGNED NOT NULL,
       role_id INT UNSIGNED NOT NULL,
       PRIMARY KEY (permission_id, role_id)
     );
 
-    CREATE TABLE model_has_roles (
+    CREATE TABLE IF NOT EXISTS model_has_roles (
       role_id INT UNSIGNED NOT NULL,
       model_type VARCHAR(255) NOT NULL,
       model_id BIGINT UNSIGNED NOT NULL,
       PRIMARY KEY (role_id, model_id, model_type)
     );
 
-    CREATE TABLE employment_statuses (
+    CREATE TABLE IF NOT EXISTS employment_statuses (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(100) NOT NULL,
       description TEXT NULL
     );
 
-    CREATE TABLE organization_units (
+    CREATE TABLE IF NOT EXISTS organization_units (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       code VARCHAR(50) NULL,
@@ -81,7 +80,7 @@ module.exports = async function globalSetup() {
       organization_unit_id INT UNSIGNED NULL
     );
 
-    CREATE TABLE employees (
+    CREATE TABLE IF NOT EXISTS employees (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       employee_number VARCHAR(50) NULL,
       name VARCHAR(255) NOT NULL,
@@ -98,7 +97,7 @@ module.exports = async function globalSetup() {
     );
 
     -- committees = Projects (digunakan oleh projectController & committeeController)
-    CREATE TABLE committees (
+    CREATE TABLE IF NOT EXISTS committees (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       description TEXT NULL,
@@ -114,7 +113,7 @@ module.exports = async function globalSetup() {
     );
 
     -- Anggota internal (dari employees)
-    CREATE TABLE committee_members (
+    CREATE TABLE IF NOT EXISTS committee_members (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       committee_id BIGINT UNSIGNED NOT NULL,
       employee_id BIGINT UNSIGNED NOT NULL,
@@ -126,7 +125,7 @@ module.exports = async function globalSetup() {
     );
 
     -- Anggota eksternal (manual)
-    CREATE TABLE committee_external_members (
+    CREATE TABLE IF NOT EXISTS committee_external_members (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       committee_id BIGINT UNSIGNED NOT NULL,
       name VARCHAR(255) NOT NULL,
@@ -138,7 +137,7 @@ module.exports = async function globalSetup() {
     );
 
     -- RAB (nama tabel sesuai budgetController.js)
-    CREATE TABLE committee_budgets (
+    CREATE TABLE IF NOT EXISTS committee_budgets (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       committee_id BIGINT UNSIGNED NOT NULL,
       name VARCHAR(255) NOT NULL,
@@ -150,7 +149,7 @@ module.exports = async function globalSetup() {
       FOREIGN KEY (committee_id) REFERENCES committees(id) ON DELETE CASCADE
     );
 
-    CREATE TABLE committee_budget_items (
+    CREATE TABLE IF NOT EXISTS committee_budget_items (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       committee_budget_id BIGINT UNSIGNED NOT NULL,
       name VARCHAR(255) NOT NULL,
@@ -163,7 +162,7 @@ module.exports = async function globalSetup() {
     );
 
     -- Pengeluaran (expenses)
-    CREATE TABLE committee_expenses (
+    CREATE TABLE IF NOT EXISTS committee_expenses (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       committee_budget_item_id BIGINT UNSIGNED NOT NULL,
       amount DECIMAL(15,2) DEFAULT 0,
@@ -178,7 +177,7 @@ module.exports = async function globalSetup() {
       FOREIGN KEY (committee_budget_item_id) REFERENCES committee_budget_items(id) ON DELETE CASCADE
     );
 
-    CREATE TABLE committee_tasks (
+    CREATE TABLE IF NOT EXISTS committee_tasks (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       committee_id BIGINT UNSIGNED NOT NULL,
       assigned_to BIGINT UNSIGNED NULL,
@@ -194,7 +193,7 @@ module.exports = async function globalSetup() {
       FOREIGN KEY (committee_id) REFERENCES committees(id) ON DELETE CASCADE
     );
 
-    CREATE TABLE committee_task_progress (
+    CREATE TABLE IF NOT EXISTS committee_task_progress (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       committee_task_id BIGINT UNSIGNED NOT NULL,
       description TEXT NOT NULL,
@@ -206,12 +205,21 @@ module.exports = async function globalSetup() {
       FOREIGN KEY (committee_task_id) REFERENCES committee_tasks(id) ON DELETE CASCADE
     );
 
-    CREATE TABLE sessions (
+    CREATE TABLE IF NOT EXISTS sessions (
       id VARCHAR(128) PRIMARY KEY,
-      last_activity INT UNSIGNED NOT NULL,
+      last_activity INT(11) UNSIGNED NOT NULL,
       payload MEDIUMTEXT
     );
   `);
+
+  // Kosongkan data tabel (TRUNCATE) agar fresh
+  await conn.query('SET FOREIGN_KEY_CHECKS = 0');
+  const [tables] = await conn.query('SHOW TABLES');
+  for (const row of tables) {
+    const tableName = Object.values(row)[0];
+    await conn.query(`TRUNCATE TABLE \`${tableName}\``);
+  }
+  await conn.query('SET FOREIGN_KEY_CHECKS = 1');
 
   // ── 3. Seed data awal ──────────────────────────────────────────────────────
   const hashedPw = await bcrypt.hash('password', 10);

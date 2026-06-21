@@ -349,9 +349,10 @@
             <p class="text-xs text-muted-foreground">FTI Administrator</p>
           </div>
 
-          <a
-            href="/logout"
-            class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+          <button
+            type="button"
+            onclick="document.getElementById('logout-confirm-dialog').showModal()"
+            class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -360,7 +361,7 @@
               <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
             <span>Logout</span>
-          </a>
+          </button>
         </div>
 
       </div>
@@ -368,3 +369,24 @@
 
   </nav>
 </aside>
+
+<%# ── Logout Confirmation Dialog ──────────────────────────────────────────── %>
+<dialog id="logout-confirm-dialog" class="dialog" aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
+  <div>
+    <header>
+      <h2 id="alert-dialog-title">Konfirmasi Logout</h2>
+      <p id="alert-dialog-description">Apakah kamu yakin ingin keluar dari aplikasi?</p>
+    </header>
+
+    <footer>
+      <button type="button" class="btn-outline" onclick="document.getElementById('logout-confirm-dialog').close()">Batal</button>
+      <a href="/logout" class="btn bg-destructive text-white hover:bg-destructive/90 text-center">Ya, Logout</a>
+    </footer>
+  </div>
+</dialog>
+<script>
+  // Close dialog when clicking backdrop
+  document.getElementById('logout-confirm-dialog').addEventListener('click', function(e) {
+    if (e.target === this) this.close();
+  });
+</script>

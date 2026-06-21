@@ -287,14 +287,44 @@ const budgetUpdate = async (req, res, next) => {
       [name.trim(), description || null, totalAmount, budgetId]
     );
 
-    // Replace items
-    await db.query('DELETE FROM committee_budget_items WHERE committee_budget_id = ?', [budgetId]);
+    // Fetch existing items to match by name
+    const [existingItems] = await db.query('SELECT * FROM committee_budget_items WHERE committee_budget_id = ?', [budgetId]);
+    const existingMap = new Map();
+    existingItems.forEach(item => existingMap.set(item.name.toLowerCase(), item.id));
+
+    const keptIds = [];
     for (const item of items) {
-      await db.query(
-        `INSERT INTO committee_budget_items (committee_budget_id, name, quantity, unit_price, total_price, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-        [budgetId, item.name, item.quantity, item.unit_price, item.total_price]
+      const existingId = existingMap.get(item.name.toLowerCase());
+      if (existingId) {
+        await db.query(
+          'UPDATE committee_budget_items SET quantity = ?, unit_price = ?, total_price = ?, updated_at = NOW() WHERE id = ?',
+          [item.quantity, item.unit_price, item.total_price, existingId]
+        );
+        keptIds.push(existingId);
+      } else {
+        const [resIns] = await db.query(
+          `INSERT INTO committee_budget_items (committee_budget_id, name, quantity, unit_price, total_price, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+          [budgetId, item.name, item.quantity, item.unit_price, item.total_price]
+        );
+        keptIds.push(resIns.insertId);
+      }
+    }
+
+    // Delete items that are no longer in the form
+    if (keptIds.length > 0) {
+      // Check if deleted items have expenses
+      const [toDelete] = await db.query(
+        `SELECT id FROM committee_budget_items WHERE committee_budget_id = ? AND id NOT IN (?)`,
+        [budgetId, keptIds]
       );
+      if (toDelete.length > 0) {
+        const delIds = toDelete.map(r => r.id);
+        const [expCheck] = await db.query('SELECT id FROM committee_expenses WHERE committee_budget_item_id IN (?)', [delIds]);
+        if (expCheck.length === 0) {
+          await db.query('DELETE FROM committee_budget_items WHERE id IN (?)', [delIds]);
+        }
+      }
     }
 
     req.session.toast = { message: 'RAB berhasil diperbarui!', type: 'success' };
