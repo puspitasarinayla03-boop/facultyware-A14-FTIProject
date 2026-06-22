@@ -9,7 +9,7 @@ async function getFirstCommitteeId(page) {
   await page.goto(BASE + '/committees');
   const link = page.locator('a[href*="/committees/"]').filter({ hasNotText: /create|tambah|buat/i }).first();
   const visible = await link.isVisible({ timeout: 5000 }).catch(() => false);
-  
+
   if (!visible) {
     // Buat project dulu
     await page.goto(BASE + '/projects/create');
@@ -19,7 +19,7 @@ async function getFirstCommitteeId(page) {
     await page.selectOption('#status', 'active');
     await page.locator('form[action="/projects"] button[type="submit"]').first().click();
     await page.waitForURL(url => !url.toString().includes('/create'), { timeout: 10000 });
-    
+
     // Buat committee
     await page.goto(BASE + '/committees/create');
     await page.locator('#committee_id').selectOption({ index: 1 });
@@ -30,7 +30,7 @@ async function getFirstCommitteeId(page) {
     await page.selectOption('select[name="external_role[]"]', 'Ketua');
     await page.click('#submit-create-btn');
     await page.waitForURL(url => !url.toString().includes('/create'), { timeout: 10000 });
-    
+
     // Kembali ke daftar committees untuk mengambil ID
     await page.goto(BASE + '/committees');
   }
@@ -193,33 +193,46 @@ test('Hapus RAB berhasil', async ({ page }) => {
   const id = await getFirstCommitteeId(page);
   if (!id) { console.log('[04-budgets] Tidak ada kepanitiaan, test hapus di-skip.'); return; }
 
+  // Buat RAB khusus untuk dihapus agar tidak mengganggu data yang dipakai test 06-expenses
+  await page.goto(`${BASE}/committees/${id}/budgets/create`);
+  await expect(page.locator('form#budget-form')).toBeVisible({ timeout: 8000 });
+  await page.fill('#name', 'RAB Hapus Playwright');
+  // Isi minimal 1 item agar form bisa disubmit
+  const firstRow = page.locator('.item-row').nth(0);
+  await firstRow.locator('input[name="item_name[]"]').fill('Item Hapus');
+  await firstRow.locator('.item-qty').fill('1');
+  await firstRow.locator('.item-price').fill('10000');
+  await firstRow.locator('.item-price').dispatchEvent('input');
+
+  // Form starts with 2 rows by default — fill second row to pass HTML5 required
+  const secondRow = page.locator('.item-row').nth(1);
+  const secondRowVisible = await secondRow.isVisible({ timeout: 2000 }).catch(() => false);
+  if (secondRowVisible) {
+    await secondRow.locator('input[name="item_name[]"]').fill('Item Hapus 2');
+    await secondRow.locator('.item-qty').fill('1');
+    await secondRow.locator('.item-price').fill('5000');
+    await secondRow.locator('.item-price').dispatchEvent('input');
+  }
+
+  await page.click('#save-budget-btn');
+  await page.waitForURL(url => !url.toString().includes('/create'), { timeout: 10000 });
+
+  // Buka detail RAB yang baru dibuat
   await page.goto(`${BASE}/committees/${id}/budgets`);
-
-  const rabCard = page.locator('.card', { hasText: 'RAB Test Playwright' }).first();
-  const rabLink = rabCard.locator('a', { hasText: /Detail/i }).first();
-  const rabVisible = await rabLink.isVisible({ timeout: 5000 }).catch(() => false);
-  if (!rabVisible) { console.log('[04-budgets] RAB test tidak ditemukan, test hapus di-skip.'); return; }
-
-  await rabLink.click();
+  const rabCard = page.locator('.card', { hasText: 'RAB Hapus Playwright' }).first();
+  await expect(rabCard).toBeVisible({ timeout: 8000 });
+  await rabCard.locator('a', { hasText: /Detail/i }).first().click();
   await page.waitForURL(/\/budgets\/\d+/);
 
-  const deleteBtn = page.locator('button, a', { hasText: /hapus|delete/i }).first();
-  const deleteVisible = await deleteBtn.isVisible({ timeout: 5000 }).catch(() => false);
+  const deleteBtn = page.locator('#quick-delete-btn').first();
+  await expect(deleteBtn).toBeVisible({ timeout: 5000 });
+  await deleteBtn.click();
 
-  if (deleteVisible) {
-    // Klik tombol hapus (yang bisa membuka modal)
-    await deleteBtn.click();
+  const confirmBtn = page.locator('button[onclick="executeDeleteForm()"]').first();
+  await expect(confirmBtn).toBeVisible({ timeout: 5000 });
 
-    // Tunggu modal muncul, lalu klik tombol konfirmasi yang spesifik
-    const confirmBtn = page.locator('#confirmDeleteBtn, form[action*="/delete"] button[type="submit"]').first();
-    if (await confirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await confirmBtn.click();
-    }
-
-    // Kembali ke daftar RAB
-    await page.waitForURL(/\/budgets$/, { timeout: 10000 });
-    await expect(page.locator('body')).not.toContainText('RAB Test Playwright');
-  } else {
-    console.log('[04-budgets] Tombol hapus tidak ditemukan, test di-skip.');
-  }
+  const urlBefore = page.url();
+  await confirmBtn.click();
+  await page.waitForURL(url => url.toString() !== urlBefore, { timeout: 10000 });
+  await expect(page.locator('body')).not.toContainText('RAB Hapus Playwright');
 });

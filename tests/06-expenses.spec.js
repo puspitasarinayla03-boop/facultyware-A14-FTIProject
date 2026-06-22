@@ -6,15 +6,15 @@ const BASE = 'http://localhost:3000';
 
 async function getFirstBudgetUrl(page) {
   await page.goto(BASE + '/committees');
-  const committeeLink = page.locator('a[href*="/committees/"]').filter({ hasNotText: /create|tambah/i }).first();
+  const committeeLink = page.locator('a[href*="/committees/"]').filter({ hasNotText: /create|tambah|buat/i }).first();
   await committeeLink.click();
   await page.waitForURL(/\/committees\/\d+/);
   const committeeId = page.url().match(/\/committees\/(\d+)/)?.[1];
 
   await page.goto(BASE + `/committees/${committeeId}/budgets`);
-  const budgetLink = page.locator('a', { hasText: 'RAB Test Playwright' }).first();
-  await expect(budgetLink).toBeVisible({ timeout: 8000 });
-  await budgetLink.click();
+  const rabCard = page.locator('.card').filter({ hasText: 'RAB Test Playwright' }).first();
+  await expect(rabCard).toBeVisible({ timeout: 8000 });
+  await rabCard.locator('a', { hasText: /detail/i }).click();
   await page.waitForURL(/\/budgets\/\d+/);
   return { url: page.url(), committeeId };
 }
@@ -82,4 +82,75 @@ test('Reject pengeluaran dapat dilakukan', async ({ page }) => {
   } else {
     console.log('[06-expenses] Tidak ada pengeluaran yang bisa di-reject, lewati.');
   }
+});
+
+// ── Test 5: Halaman selector expenses dapat diakses ─────────────────────────
+test('Halaman selector expenses dapat diakses', async ({ page }) => {
+  await page.goto(BASE + '/expenses');
+  await expect(page).not.toHaveURL(BASE + '/login');
+  await expect(page.locator('body')).toContainText(/expense|pengeluaran/i);
+});
+
+// ── Test 6: Form tambah pengeluaran dapat dibuka ─────────────────────────────
+test('Form tambah pengeluaran dapat dibuka', async ({ page }) => {
+  await getFirstBudgetUrl(page);
+
+  const toggleBtn = page.locator('#toggle-expense-form-btn');
+  await expect(toggleBtn).toBeVisible({ timeout: 8000 });
+  await toggleBtn.click();
+
+  // Form panel harus muncul setelah toggle
+  const formPanel = page.locator('#expense-form-panel');
+  await expect(formPanel).not.toHaveClass(/hidden/);
+  await expect(page.locator('#expense-item-select')).toBeVisible();
+  await expect(page.locator('#expense-amount')).toBeVisible();
+});
+
+// ── Test 7: Validasi pengeluaran: amount wajib diisi ─────────────────────────
+test('Validasi pengeluaran: amount wajib diisi', async ({ page }) => {
+  await getFirstBudgetUrl(page);
+
+  const toggleBtn = page.locator('#toggle-expense-form-btn');
+  await expect(toggleBtn).toBeVisible({ timeout: 8000 });
+  await toggleBtn.click();
+
+  // Pilih item anggaran
+  const itemSelect = page.locator('#expense-item-select');
+  const opts = await itemSelect.locator('option').all();
+  if (opts.length > 1) {
+    await itemSelect.selectOption({ index: 1 });
+  }
+
+  // Kosongkan amount lalu submit
+  await page.locator('#expense-amount').fill('');
+  await page.locator('#submit-expense-btn').click();
+
+  // Harus tetap di halaman RAB (HTML5 required mencegah submit)
+  await expect(page).toHaveURL(/\/budgets\/\d+/);
+});
+
+// ── Test 8: Hapus pengeluaran berhasil ──────────────────────────────────────
+test('Hapus pengeluaran berhasil', async ({ page }) => {
+  await getFirstBudgetUrl(page);
+
+  const deleteBtn = page.locator('button[id^="del-expense-"]').first();
+  const visible = await deleteBtn.isVisible({ timeout: 5000 }).catch(() => false);
+
+  if (visible) {
+    await deleteBtn.click();
+    const confirmBtn = page.locator('#confirm-delete-btn').first();
+    if (await confirmBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await confirmBtn.click();
+    }
+    await page.waitForTimeout(1000);
+    await expect(page).toHaveURL(/\/budgets\/\d+/);
+  } else {
+    console.log('[06-expenses] Tidak ada pengeluaran untuk dihapus, test di-skip.');
+  }
+});
+
+// ── Test 9: Ringkasan pengeluaran tampil di sidebar RAB ─────────────────────
+test('Ringkasan pengeluaran tampil di halaman detail RAB', async ({ page }) => {
+  await getFirstBudgetUrl(page);
+  await expect(page.locator('body')).toContainText(/pengajuan|pengeluaran/i);
 });

@@ -21,7 +21,7 @@ const PROJECT_UPDATED = {
 test('Daftar proyek dapat diakses', async ({ page }) => {
   await page.goto(BASE + '/projects');
   await expect(page).not.toHaveURL(BASE + '/login');
-  
+
   // Gunakan .first() untuk menghindari strict mode violation jika ada banyak h1/h2/h3
   await expect(page.locator('h1, h2, h3').filter({ hasText: /proyek|project/i }).first()).toBeVisible();
 });

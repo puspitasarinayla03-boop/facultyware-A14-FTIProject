@@ -71,6 +71,7 @@ module.exports = defineConfig({
         '**/06-expenses.spec.js',
         '**/07-progress.spec.js',
         '**/08-laporan-progress.spec.js',
+        '**/09-dashboard.spec.js',
       ],
       dependencies: ['setup'],
       use: {

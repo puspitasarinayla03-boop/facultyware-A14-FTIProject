@@ -26,10 +26,10 @@ test('Buat kepanitiaan baru berhasil', async ({ page }) => {
     await page.fill('#objective', 'Testing kepanitiaan');
     await page.fill('#start_date', '2026-08-01');
     await page.selectOption('#status', 'active');
-    
+
     // Klik tombol simpan yang spesifik
     await page.locator('form[action="/projects"] button[type="submit"]').first().click();
-    
+
     await page.waitForURL(url => !url.toString().includes('/create'), { timeout: 10000 });
     await page.goto(BASE + '/committees/create');
   }
@@ -47,7 +47,7 @@ test('Buat kepanitiaan baru berhasil', async ({ page }) => {
   await page.locator('#add-external-btn').click();
   await page.fill('input[name="external_name[]"]', 'Anggota Test Playwright');
   await page.fill('input[name="external_institution[]"]', 'Universitas Test');
-  await page.selectOption('select[name="external_role[]"]', 'Ketua');
+  await page.selectOption('select[name="external_role[]"]', 'Anggota');
 
   await page.click('#submit-create-btn');
 
