@@ -59,6 +59,17 @@ FacultyWare adalah sistem informasi berbasis web yang dirancang untuk membantu p
 
 ---
 
+## Pembagian Jobdesk
+
+Berikut adalah pembagian tugas (jobdesk) masing-masing anggota tim dalam pengembangan sistem ini:
+
+| Nama Anggota | NIM | Jobdesk  |
+|-------------|-----|-----------------|
+| Nayla Puspita Sari| 2411521007 |  Manajemen Proyek, Manajemen Kepanitiaan + SK, Manajemen RAB|
+| Anggun Meika Candra   | 2411521012 | Manajemen Pengeluaran, Manajemen Tugas, Laporan Progress, Halaman Dashboard |
+
+---
+
 ## Tech Stack
 
 | Kategori       | Teknologi                                    |
